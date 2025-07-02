@@ -149,6 +149,14 @@
         "documentation": {}
     },
     {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "dataclass",
         "importPath": "dataclasses",
         "description": "dataclasses",
@@ -340,7 +348,16 @@
         "kind": 2,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "def chat():\n    \"\"\"Handle chat messages\"\"\"\n    try:\n        data = request.get_json()\n        message = data.get('message', '').strip()\n        logger.info(f\"Chat request received: {message[:100]}...\")\n        if not message:\n            return jsonify({'success': False, 'error': 'No message provided'}), 400\n        if not processor:\n            logger.error(\"Processor not initialized for chat\")",
+        "peekOfCode": "def chat():\n    \"\"\"Handle chat messages\"\"\"\n    try:\n        data = request.get_json()\n        message = data.get('message', '').strip()\n        document_ids = data.get('document_ids', None)  # New parameter for document filtering\n        logger.info(f\"Chat request received: {message[:100]}...\")\n        if document_ids:\n            logger.info(f\"Document filter: {document_ids}\")\n        if not message:",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "get_documents",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def get_documents():\n    \"\"\"Get list of all documents for file selection\"\"\"\n    try:\n        logger.info(\"Documents request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for documents\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        documents = processor.vector_db.get_all_documents()\n        return jsonify({\n            'success': True,",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -475,7 +492,7 @@
         "kind": 2,
         "importPath": "meeting_processor",
         "description": "meeting_processor",
-        "peekOfCode": "def get_llm(access_token: str = None):\n    \"\"\"\n    Get OpenAI LLM client. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    return ChatOpenAI(\n        model=\"gpt-4o\",  # Using GPT-4o model\n        openai_api_key=openai_api_key,\n        temperature=0,\n        max_tokens=4000,  # Adjust as needed",
+        "peekOfCode": "def get_llm(access_token: str = None):\n    \"\"\"\n    Get OpenAI LLM client. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    # Get fresh API key each time to avoid caching issues\n    current_api_key = os.getenv(\"OPENAI_API_KEY\")\n    if not current_api_key:\n        raise ValueError(\"OPENAI_API_KEY environment variable not set\")\n    return ChatOpenAI(",
         "detail": "meeting_processor",
         "documentation": {}
     },
@@ -484,7 +501,7 @@
         "kind": 2,
         "importPath": "meeting_processor",
         "description": "meeting_processor",
-        "peekOfCode": "def get_embedding_model(access_token: str = None):\n    \"\"\"\n    Get OpenAI embedding model. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    return OpenAIEmbeddings(\n        model=\"text-embedding-3-large\",  # Using text-embedding-3-large\n        openai_api_key=openai_api_key,\n        dimensions=3072  # text-embedding-3-large dimension\n    )",
+        "peekOfCode": "def get_embedding_model(access_token: str = None):\n    \"\"\"\n    Get OpenAI embedding model. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    # Get fresh API key each time to avoid caching issues\n    current_api_key = os.getenv(\"OPENAI_API_KEY\")\n    if not current_api_key:\n        raise ValueError(\"OPENAI_API_KEY environment variable not set\")\n    return OpenAIEmbeddings(",
         "detail": "meeting_processor",
         "documentation": {}
     },
@@ -502,7 +519,7 @@
         "kind": 5,
         "importPath": "meeting_processor",
         "description": "meeting_processor",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nopenai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Check API key availability at startup\nopenai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nlogger.info(f\"OpenAI API key loaded: {openai_api_key[:15]}...{openai_api_key[-10:]}\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---",
         "detail": "meeting_processor",
         "documentation": {}
     },
@@ -511,7 +528,7 @@
         "kind": 5,
         "importPath": "meeting_processor",
         "description": "meeting_processor",
-        "peekOfCode": "openai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.",
+        "peekOfCode": "openai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nlogger.info(f\"OpenAI API key loaded: {openai_api_key[:15]}...{openai_api_key[-10:]}\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"",
         "detail": "meeting_processor",
         "documentation": {}
     },

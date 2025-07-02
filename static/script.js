@@ -6,6 +6,11 @@ let savedConversations = [];
 let currentConversationId = null;
 let conversationCounter = 1;
 
+// Document selection variables
+let availableDocuments = [];
+let selectedDocuments = [];
+let isDocumentDropdownOpen = false;
+
 // Storage keys
 const STORAGE_KEYS = {
     CONVERSATIONS: 'uhg_conversations',
@@ -232,6 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize mobile fixes
     initializeMobileFixes();
+    
+    // Load documents for @ mentions
+    loadDocuments();
+    
+    // Setup @ mention detection
+    setupAtMentionDetection();
+    
 });
 
 // Enhanced event listeners setup
@@ -462,6 +474,15 @@ async function sendMessage() {
     if (welcomeScreen) {
         welcomeScreen.style.display = 'none';
     }
+    
+    // Clear any existing follow-up questions
+    clearFollowUpQuestions();
+    
+    // Hide document dropdown if open
+    hideDocumentDropdown();
+
+    // Parse message for document selection
+    const { cleanMessage, documentIds } = parseMessageForDocuments(message);
 
     // Add user message to UI and history
     addMessageToUI('user', message, true);
@@ -472,18 +493,25 @@ async function sendMessage() {
     });
     
     input.value = '';
+    selectedDocuments = []; // Clear selected documents after sending
+    updateSelectedDocuments();
     autoResize();
 
     // Show typing indicator
     showTypingIndicator();
 
     try {
+        const requestBody = { message: cleanMessage };
+        if (documentIds) {
+            requestBody.document_ids = documentIds;
+        }
+        
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify(requestBody)
         });
 
         hideTypingIndicator();
@@ -498,6 +526,11 @@ async function sendMessage() {
                     content: data.response, 
                     timestamp: new Date().toISOString()
                 });
+                
+                // Add follow-up questions if available
+                if (data.follow_up_questions && data.follow_up_questions.length > 0) {
+                    addFollowUpQuestions(data.follow_up_questions);
+                }
                 
                 // Auto-save conversation after each exchange
                 saveCurrentConversationToPersistentStorage();
@@ -583,6 +616,316 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
+function addFollowUpQuestions(questions) {
+    const messagesArea = document.getElementById('messages-area');
+    
+    // Remove any existing follow-up questions
+    const existingFollowUps = messagesArea.querySelectorAll('.follow-up-container');
+    existingFollowUps.forEach(container => container.remove());
+    
+    if (!questions || questions.length === 0) return;
+    
+    const followUpContainer = document.createElement('div');
+    followUpContainer.className = 'follow-up-container';
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'follow-up-header';
+    headerDiv.innerHTML = '<span>💡</span> <span>Suggested follow-up questions:</span>';
+    followUpContainer.appendChild(headerDiv);
+    
+    const questionsDiv = document.createElement('div');
+    questionsDiv.className = 'follow-up-questions';
+    
+    questions.forEach((question, index) => {
+        const questionButton = document.createElement('button');
+        questionButton.className = 'follow-up-question';
+        questionButton.textContent = question;
+        questionButton.onclick = () => {
+            // Set the question in the input and send it
+            const input = document.getElementById('message-input');
+            input.value = question;
+            autoResize();
+            
+            // Remove follow-up questions after selection
+            followUpContainer.remove();
+            
+            // Send the message
+            sendMessage();
+        };
+        questionsDiv.appendChild(questionButton);
+    });
+    
+    followUpContainer.appendChild(questionsDiv);
+    messagesArea.appendChild(followUpContainer);
+    
+    // Scroll to show follow-up questions
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function clearFollowUpQuestions() {
+    const messagesArea = document.getElementById('messages-area');
+    const existingFollowUps = messagesArea.querySelectorAll('.follow-up-container');
+    existingFollowUps.forEach(container => container.remove());
+}
+
+// Document Selection Functions
+async function loadDocuments() {
+    try {
+        const response = await fetch('/api/documents');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                availableDocuments = data.documents;
+                console.log(`Loaded ${availableDocuments.length} documents for @ mention selection`);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading documents:', error);
+    }
+}
+
+function detectAtMention(input) {
+    const text = input.value;
+    const cursorPos = input.selectionStart;
+    
+    // Find @ symbols and check if cursor is after one
+    let atPos = -1;
+    for (let i = cursorPos - 1; i >= 0; i--) {
+        if (text[i] === '@') {
+            // Check if @ is at start or after whitespace
+            if (i === 0 || /\s/.test(text[i - 1])) {
+                atPos = i;
+                break;
+            }
+        }
+        if (/\s/.test(text[i])) {
+            break; // Stop at whitespace
+        }
+    }
+    
+    if (atPos !== -1) {
+        const searchText = text.substring(atPos + 1, cursorPos);
+        return { isActive: true, searchText, atPos };
+    }
+    
+    return { isActive: false, searchText: '', atPos: -1 };
+}
+
+function filterDocuments(searchText) {
+    if (!searchText.trim()) {
+        return availableDocuments;
+    }
+    
+    const search = searchText.toLowerCase();
+    return availableDocuments.filter(doc => 
+        doc.filename.toLowerCase().includes(search) ||
+        (doc.title && doc.title.toLowerCase().includes(search))
+    );
+}
+
+function showDocumentDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Document dropdown elements not found');
+        return;
+    }
+    
+    const filteredDocs = filterDocuments(searchText);
+    
+    if (filteredDocs.length === 0) {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No matching documents found</div>';
+    } else {
+        documentList.innerHTML = filteredDocs.map(doc => {
+            const isSelected = selectedDocuments.some(selected => selected.document_id === doc.document_id);
+            const date = new Date(doc.date).toLocaleDateString();
+            const size = formatFileSize(doc.file_size);
+            
+            return `
+                <div class="document-item ${isSelected ? 'selected' : ''}" data-doc-id="${doc.document_id}">
+                    <div class="document-icon">📄</div>
+                    <div class="document-info">
+                        <div class="document-filename" title="${doc.filename}">${doc.filename}</div>
+                        <div class="document-meta">
+                            <div class="document-date">📅 ${date}</div>
+                            <div class="document-size">📊 ${size}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click listeners
+        documentList.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const docId = item.dataset.docId;
+                const doc = filteredDocs.find(d => d.document_id === docId);
+                if (doc) {
+                    selectDocument(doc);
+                }
+            });
+        });
+    }
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+    
+    // Smart positioning: show above input if no space below
+    setTimeout(() => {
+        const rect = dropdown.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - rect.top;
+        const dropdownHeight = 300; // max-height from CSS
+        
+        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+            // Not enough space below, show above
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = '100%';
+            dropdown.style.marginTop = '0';
+            dropdown.style.marginBottom = '4px';
+        } else {
+            // Enough space below or not enough space above, show below
+            dropdown.style.top = '100%';
+            dropdown.style.bottom = 'auto';
+            dropdown.style.marginTop = '4px';
+            dropdown.style.marginBottom = '0';
+        }
+    }, 0);
+}
+
+function hideDocumentDropdown() {
+    const dropdown = document.getElementById('document-dropdown');
+    dropdown.classList.remove('active');
+    isDocumentDropdownOpen = false;
+}
+
+function selectDocument(doc) {
+    // Check if already selected
+    if (selectedDocuments.some(selected => selected.document_id === doc.document_id)) {
+        return;
+    }
+    
+    selectedDocuments.push(doc);
+    updateSelectedDocuments();
+    hideDocumentDropdown();
+    
+    // Clear the @ mention from input
+    const input = document.getElementById('message-input');
+    const mention = detectAtMention(input);
+    if (mention.isActive) {
+        const text = input.value;
+        const beforeAt = text.substring(0, mention.atPos);
+        const afterMention = text.substring(input.selectionStart);
+        input.value = beforeAt + afterMention;
+        input.focus();
+    }
+}
+
+function removeDocument(docId) {
+    selectedDocuments = selectedDocuments.filter(doc => doc.document_id !== docId);
+    updateSelectedDocuments();
+}
+
+function updateSelectedDocuments() {
+    const container = document.getElementById('selected-documents');
+    
+    if (selectedDocuments.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = selectedDocuments.map(doc => `
+        <div class="document-pill">
+            <span class="document-name" title="${doc.filename}">${doc.filename}</span>
+            <button class="remove-btn" onclick="removeDocument('${doc.document_id}')" title="Remove">×</button>
+        </div>
+    `).join('');
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function parseMessageForDocuments(message) {
+    // Extract selected document IDs
+    const documentIds = selectedDocuments.map(doc => doc.document_id);
+    
+    // Return clean message and document IDs
+    return {
+        cleanMessage: message.trim(),
+        documentIds: documentIds.length > 0 ? documentIds : null
+    };
+}
+
+function setupAtMentionDetection() {
+    const input = document.getElementById('message-input');
+    
+    // Handle @ mention detection on input
+    input.addEventListener('input', function(e) {
+        const mention = detectAtMention(input);
+        
+        if (mention.isActive) {
+            showDocumentDropdown(mention.searchText);
+        } else {
+            hideDocumentDropdown();
+        }
+    });
+    
+    // Handle keyboard navigation
+    input.addEventListener('keydown', function(e) {
+        if (isDocumentDropdownOpen) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                hideDocumentDropdown();
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateDocumentDropdown(e.key === 'ArrowDown' ? 1 : -1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                selectHighlightedDocument();
+            }
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (isDocumentDropdownOpen && !e.target.closest('.input-area')) {
+            hideDocumentDropdown();
+        }
+    });
+}
+
+let highlightedDocumentIndex = -1;
+
+function navigateDocumentDropdown(direction) {
+    const items = document.querySelectorAll('.document-item:not(.selected)');
+    if (items.length === 0) return;
+    
+    // Remove previous highlight
+    items.forEach(item => item.classList.remove('highlighted'));
+    
+    // Update index
+    highlightedDocumentIndex += direction;
+    if (highlightedDocumentIndex < 0) highlightedDocumentIndex = items.length - 1;
+    if (highlightedDocumentIndex >= items.length) highlightedDocumentIndex = 0;
+    
+    // Add new highlight
+    items[highlightedDocumentIndex].classList.add('highlighted');
+    items[highlightedDocumentIndex].scrollIntoView({ block: 'nearest' });
+}
+
+function selectHighlightedDocument() {
+    const highlighted = document.querySelector('.document-item.highlighted');
+    if (highlighted) {
+        highlighted.click();
+    }
+}
+
 function showTypingIndicator() {
     document.getElementById('typing-indicator').classList.add('active');
     const messagesArea = document.getElementById('messages-area');
@@ -623,7 +966,10 @@ function updateConversationList() {
         
         conversationItem.innerHTML = `
             <span class="conversation-icon">💬</span>
-            <span style="flex: 1; text-align: left;" title="${conv.title}">${title}</span>
+            <span class="conversation-title" title="${conv.title}">${title}</span>
+            <button class="conversation-menu-btn" onclick="event.stopPropagation(); showConversationMenu(event, '${conv.id}')" title="More options">
+                <span>⋯</span>
+            </button>
         `;
         listContainer.appendChild(conversationItem);
     });
@@ -762,6 +1108,9 @@ function startNewChat() {
     // Clear the messages area and show welcome screen
     showWelcomeScreen();
     
+    // Clear any follow-up questions
+    clearFollowUpQuestions();
+    
     // Update UI elements
     updateConversationList();
     updateChatTitle('UHG Meeting Document AI');
@@ -785,6 +1134,56 @@ function updateChatTitle(title) {
     const chatTitleElement = document.getElementById('chat-title');
     if (chatTitleElement) {
         chatTitleElement.textContent = title || 'UHG Meeting Document AI';
+    }
+}
+
+function deleteConversation(conversationId) {
+    console.log(`Attempting to delete conversation: ${conversationId}`);
+    
+    // Find the conversation to get its title for confirmation
+    const conversation = savedConversations.find(c => c.id === conversationId);
+    if (!conversation) {
+        console.error(`Conversation ${conversationId} not found`);
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmMessage = `Are you sure you want to delete the conversation "${conversation.title}"?\n\nThis action cannot be undone.`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        // Remove from saved conversations array
+        const conversationIndex = savedConversations.findIndex(c => c.id === conversationId);
+        if (conversationIndex !== -1) {
+            savedConversations.splice(conversationIndex, 1);
+            console.log(`Removed conversation from array: ${conversation.title}`);
+        }
+        
+        // Handle if we're deleting the currently active conversation
+        if (currentConversationId === conversationId) {
+            console.log('Deleting currently active conversation, starting new chat');
+            currentConversationId = null;
+            conversationHistory = [];
+            
+            // Show welcome screen
+            showWelcomeScreen();
+            updateChatTitle('UHG Meeting Document AI');
+        }
+        
+        // Update UI and save to localStorage
+        updateConversationList();
+        persistAllData();
+        
+        // Show success notification
+        showNotification(`Conversation "${conversation.title}" deleted successfully`);
+        
+        console.log(`Successfully deleted conversation: ${conversation.title}`);
+        
+    } catch (error) {
+        console.error('Error deleting conversation:', error);
+        showNotification('Error deleting conversation. Please try again.');
     }
 }
 
@@ -1528,14 +1927,14 @@ function toggleSidebar() {
             // Show sidebar
             sidebar.classList.remove('collapsed');
             container.classList.remove('sidebar-collapsed');
-            toggleIcon.textContent = '⏸️';
+            toggleIcon.textContent = '☰';
             toggleBtn.classList.remove('active');
             console.log('Sidebar expanded - container classes:', container.classList.toString());
         } else {
             // Hide sidebar
             sidebar.classList.add('collapsed');
             container.classList.add('sidebar-collapsed');
-            toggleIcon.textContent = '▶️';
+            toggleIcon.textContent = '≫';
             toggleBtn.classList.add('active');
             console.log('Sidebar collapsed - container classes:', container.classList.toString());
         }
@@ -1566,7 +1965,7 @@ function closeMobileSidebar() {
     
     sidebar.classList.remove('mobile-open');
     backdrop.classList.remove('active');
-    toggleIcon.textContent = '⏸️';
+    toggleIcon.textContent = '☰';
     toggleBtn.classList.remove('active');
     sidebarOpen = false;
     
@@ -1678,3 +2077,248 @@ window.statsManagement = {
     getCacheInfo: getStatsCacheInfo,
     forceRefresh: () => loadSystemStats(true)
 };
+
+// Conversation Menu Functions
+let currentMenuConversationId = null;
+
+function showConversationMenu(event, conversationId) {
+    event.stopPropagation();
+    
+    const dropdown = document.getElementById('conversation-dropdown');
+    const button = event.target.closest('.conversation-menu-btn');
+    
+    if (!dropdown || !button) return;
+    
+    // Store current conversation ID for menu actions
+    currentMenuConversationId = conversationId;
+    
+    // Position dropdown relative to button
+    const buttonRect = button.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = `${buttonRect.bottom + 5}px`;
+    dropdown.style.left = `${buttonRect.right - 140}px`; // Align right edge of dropdown with right edge of button
+    dropdown.style.display = 'block';
+    dropdown.style.zIndex = '1000';
+    
+    // Add click outside to close functionality
+    setTimeout(() => {
+        document.addEventListener('click', closeConversationMenu);
+    }, 10);
+}
+
+function closeConversationMenu() {
+    const dropdown = document.getElementById('conversation-dropdown');
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+    currentMenuConversationId = null;
+    document.removeEventListener('click', closeConversationMenu);
+}
+
+function showEditModal() {
+    console.log('showEditModal called, currentMenuConversationId:', currentMenuConversationId);
+    
+    // Store the ID before closing menu (which clears currentMenuConversationId)
+    const conversationId = currentMenuConversationId;
+    closeConversationMenu();
+    
+    if (!conversationId) {
+        console.error('No conversationId available');
+        showNotification('No conversation selected');
+        return;
+    }
+    
+    const conversation = savedConversations.find(c => c.id === conversationId);
+    if (!conversation) {
+        console.error('Conversation not found for ID:', conversationId);
+        showNotification('Conversation not found');
+        return;
+    }
+    
+    // Set the ID back for the edit operation
+    currentMenuConversationId = conversationId;
+    
+    const modal = document.getElementById('edit-modal');
+    const input = document.getElementById('edit-input');
+    
+    if (!modal || !input) {
+        console.error('Modal or input not found:', { modal, input });
+        return;
+    }
+    
+    // Set current title in input
+    input.value = conversation.title;
+    input.focus();
+    input.select();
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Handle Enter key in input
+    input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            confirmEdit();
+        } else if (e.key === 'Escape') {
+            closeEditModal();
+        }
+    };
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-modal');
+    const input = document.getElementById('edit-input');
+    
+    if (modal) modal.classList.remove('active');
+    if (input) {
+        input.value = '';
+        input.onkeydown = null;
+    }
+}
+
+function confirmEdit() {
+    const input = document.getElementById('edit-input');
+    const newTitle = input.value.trim();
+    
+    if (!newTitle) {
+        showNotification('Please enter a conversation name');
+        input.focus();
+        return;
+    }
+    
+    if (!currentMenuConversationId) {
+        showNotification('No conversation selected');
+        closeEditModal();
+        return;
+    }
+    
+    // Find and update conversation
+    const conversation = savedConversations.find(c => c.id === currentMenuConversationId);
+    if (!conversation) {
+        showNotification('Conversation not found');
+        closeEditModal();
+        return;
+    }
+    
+    const oldTitle = conversation.title;
+    conversation.title = newTitle;
+    conversation.updatedAt = new Date().toISOString();
+    
+    // Update UI and save
+    updateConversationList();
+    persistAllData();
+    
+    // Update chat title if this is the current conversation
+    if (currentConversationId === currentMenuConversationId) {
+        updateChatTitle(newTitle);
+    }
+    
+    closeEditModal();
+    showNotification(`Conversation renamed from "${oldTitle}" to "${newTitle}"`);
+}
+
+function showDeleteModal() {
+    console.log('showDeleteModal called, currentMenuConversationId:', currentMenuConversationId);
+    
+    // Store the ID before closing menu (which clears currentMenuConversationId)
+    const conversationId = currentMenuConversationId;
+    closeConversationMenu();
+    
+    if (!conversationId) {
+        console.error('No conversationId available');
+        showNotification('No conversation selected');
+        return;
+    }
+    
+    const conversation = savedConversations.find(c => c.id === conversationId);
+    if (!conversation) {
+        console.error('Conversation not found for ID:', conversationId);
+        showNotification('Conversation not found');
+        return;
+    }
+    
+    // Set the ID back for the delete operation
+    currentMenuConversationId = conversationId;
+    
+    const modal = document.getElementById('delete-modal');
+    const message = document.getElementById('delete-message');
+    
+    if (!modal || !message) {
+        console.error('Modal or message not found:', { modal, message });
+        return;
+    }
+    
+    // Update message with conversation title
+    message.innerHTML = `Are you sure you want to delete the conversation "<strong>${conversation.title}</strong>"?<br><br>This action cannot be undone.`;
+    
+    // Show modal
+    modal.classList.add('active');
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function confirmDelete() {
+    if (!currentMenuConversationId) {
+        showNotification('No conversation selected');
+        closeDeleteModal();
+        return;
+    }
+    
+    const conversation = savedConversations.find(c => c.id === currentMenuConversationId);
+    if (!conversation) {
+        showNotification('Conversation not found');
+        closeDeleteModal();
+        return;
+    }
+    
+    try {
+        // Remove from saved conversations array
+        const conversationIndex = savedConversations.findIndex(c => c.id === currentMenuConversationId);
+        if (conversationIndex !== -1) {
+            savedConversations.splice(conversationIndex, 1);
+        }
+        
+        // Handle if we're deleting the currently active conversation
+        if (currentConversationId === currentMenuConversationId) {
+            currentConversationId = null;
+            conversationHistory = [];
+            
+            // Show welcome screen
+            showWelcomeScreen();
+            updateChatTitle('UHG Meeting Document AI');
+        }
+        
+        // Update UI and save to localStorage
+        updateConversationList();
+        persistAllData();
+        
+        closeDeleteModal();
+        showNotification(`Conversation "${conversation.title}" deleted successfully`);
+        
+    } catch (error) {
+        console.error('Error deleting conversation:', error);
+        closeDeleteModal();
+        showNotification('Error deleting conversation. Please try again.');
+    }
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    // Close edit modal when clicking outside
+    const editModal = document.getElementById('edit-modal');
+    if (editModal && editModal.classList.contains('active')) {
+        if (event.target === editModal) {
+            closeEditModal();
+        }
+    }
+    
+    // Close delete modal when clicking outside
+    const deleteModal = document.getElementById('delete-modal');
+    if (deleteModal && deleteModal.classList.contains('active')) {
+        if (event.target === deleteModal) {
+            closeDeleteModal();
+        }
+    }
+});

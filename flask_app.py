@@ -209,8 +209,11 @@ def chat():
     try:
         data = request.get_json()
         message = data.get('message', '').strip()
+        document_ids = data.get('document_ids', None)  # New parameter for document filtering
         
         logger.info(f"Chat request received: {message[:100]}...")
+        if document_ids:
+            logger.info(f"Document filter: {document_ids}")
         
         if not message:
             return jsonify({'success': False, 'error': 'No message provided'}), 400
@@ -229,24 +232,58 @@ def chat():
         
         if vector_size == 0:
             response = "I don't have any documents to analyze yet. Please upload some meeting documents first! 📁"
+            follow_up_questions = []
             logger.info("No documents available, sending default response")
         else:
             try:
                 logger.info("Generating response using processor")
-                response = processor.answer_query(message, context_limit=10)
+                response, context = processor.answer_query(message, document_ids=document_ids, context_limit=10, include_context=True)
                 logger.info(f"Response generated, length: {len(response)}")
+                
+                # Generate follow-up questions
+                try:
+                    follow_up_questions = processor.generate_follow_up_questions(message, response, context)
+                    logger.info(f"Generated {len(follow_up_questions)} follow-up questions")
+                except Exception as follow_up_error:
+                    logger.error(f"Error generating follow-up questions: {follow_up_error}")
+                    follow_up_questions = []
+                    
             except Exception as e:
                 logger.error(f"Error generating response: {e}")
                 response = f"I encountered an error while processing your question: {str(e)}"
+                follow_up_questions = []
         
         return jsonify({
             'success': True,
             'response': response,
+            'follow_up_questions': follow_up_questions,
             'timestamp': datetime.now().isoformat()
         })
         
     except Exception as e:
         logger.error(f"Chat error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/documents')
+def get_documents():
+    """Get list of all documents for file selection"""
+    try:
+        logger.info("Documents request received")
+        
+        if not processor:
+            logger.error("Processor not initialized for documents")
+            return jsonify({'success': False, 'error': 'System not initialized'}), 500
+        
+        documents = processor.vector_db.get_all_documents()
+        
+        return jsonify({
+            'success': True,
+            'documents': documents,
+            'count': len(documents)
+        })
+        
+    except Exception as e:
+        logger.error(f"Documents error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/stats')

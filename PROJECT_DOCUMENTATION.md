@@ -44,7 +44,8 @@ AI assistant old/
 **Key Endpoints:**
 - `GET /` - Main chat interface
 - `POST /api/upload` - File upload and processing
-- `POST /api/chat` - Chat message processing
+- `POST /api/chat` - Chat message processing with optional document filtering
+- `GET /api/documents` - Retrieve list of all documents for file selection
 - `GET /api/stats` - System statistics
 - `POST /api/refresh` - System refresh
 - `GET /api/test` - System health check
@@ -130,6 +131,10 @@ class DocumentChunk:
 - `hybrid_search()`: Client-side search result handling
 - `persistAllData()`: Conversation state management
 - `initializeMobileFixes()`: Mobile optimization
+- `showConversationMenu()`: Dynamic dropdown positioning for conversation actions
+- `confirmEdit()`: Conversation title editing with validation and persistence
+- `confirmDelete()`: Safe conversation deletion with custom modal confirmation
+- `closeConversationMenu()`: Click-outside-to-close behavior for dropdown menus
 
 #### CSS Styling (`styles.css`)
 - Modern design system with UHG brand colors
@@ -192,6 +197,13 @@ pydantic             # Data validation
 4. **Chunking Strategy**: Configurable size (1000 chars) with overlap (200 chars)
 5. **Vector Embeddings**: High-dimensional semantic representations
 
+### Document Selection & Querying
+1. **@ Mention System**: Type "@" to select specific documents for targeted queries
+2. **Fuzzy Search**: Real-time document filtering by filename
+3. **Multi-Document Selection**: Select multiple documents using visual pills interface
+4. **Smart Dropdown**: Automatically positions above/below input based on available space
+5. **Keyboard Navigation**: Arrow keys, Enter, and Escape support for accessibility
+
 ### Search & Retrieval
 1. **Hybrid Search**: Semantic + keyword matching
 2. **Timeframe Filtering**: Date-based document filtering
@@ -201,7 +213,11 @@ pydantic             # Data validation
 ### Web Interface
 1. **Chat Interface**: Real-time conversational AI
 2. **File Management**: Drag-and-drop upload with progress tracking
-3. **Conversation History**: Persistent conversation management
+3. **Conversation History**: Persistent conversation management with advanced individual management
+   - Three dots menu (⋯) for each conversation with rename and delete options
+   - Custom confirmation dialogs (non-browser default) for delete operations
+   - Inline rename functionality with Enter/Escape key support
+   - Smart positioning dropdown menus with click-outside-to-close behavior
 4. **Responsive Sidebar**: Collapsible sidebar with smooth animations and content adjustment
 5. **Mobile Optimization**: Touch-friendly responsive design with overlay sidebar
 6. **Statistics Dashboard**: System insights and metrics
@@ -236,18 +252,49 @@ pydantic             # Data validation
 ```
 
 ### Chat (`POST /api/chat`)
-**Request**:
+**Request (Standard)**:
 ```json
 {
     "message": "What were the main topics in recent meetings?"
 }
 ```
+
+**Request (Document-Filtered)**:
+```json
+{
+    "message": "Give me summary of the meeting",
+    "document_ids": ["doc_123", "doc_456"]
+}
+```
+
 **Response**:
 ```json
 {
     "success": true,
     "response": "Based on the meeting documents...",
+    "follow_up_questions": [
+        "What were the key decisions made?",
+        "Who were the main participants?",
+        "What are the next steps?"
+    ],
     "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### Documents (`GET /api/documents`)
+**Response**:
+```json
+{
+    "success": true,
+    "documents": [
+        {
+            "document_id": "doc_123",
+            "filename": "Print Migration Meeting.docx", 
+            "date": "2024-01-15T10:00:00Z",
+            "file_size": 1024000
+        }
+    ],
+    "count": 1
 }
 ```
 
@@ -276,11 +323,19 @@ pydantic             # Data validation
 ## Usage Examples
 
 ### Sample Queries
+
+#### General Queries (All Documents)
 1. **Topic Analysis**: "What are the main topics from recent meetings?"
 2. **Action Items**: "List all action items from last week's meetings"
 3. **Participant Analysis**: "Who are the key participants and their roles?"
 4. **Decision Tracking**: "Summarize decisions made in project meetings"
 5. **Timeline Analysis**: "Show me upcoming deadlines and milestones"
+
+#### Document-Specific Queries (@ Mention System)
+1. **Single Document**: "@Print Migration.docx give me summary of the meeting"
+2. **Multiple Documents**: "@Print Migration.docx @Team Standup.docx what are common themes?"
+3. **Filtered Analysis**: "@Budget Review.docx what decisions were made about spending?"
+4. **Comparison**: "@Q1 Planning.docx @Q2 Planning.docx compare the strategic priorities"
 6. **Problem Identification**: "What challenges or blockers were identified?"
 
 ### Document Processing Workflow
@@ -343,6 +398,37 @@ pydantic             # Data validation
 4. **Advanced Search**: Faceted search with filters
 5. **Notification System**: Alert system for action items
 
+## Technical Implementation Details
+
+### @ Mention System Architecture
+
+**Frontend Components (script.js):**
+- `detectAtMention(input)`: Parses cursor position to detect @ symbols followed by search text
+- `showDocumentDropdown(searchText)`: Displays filtered document list with smart positioning
+- `filterDocuments(searchText)`: Fuzzy search filtering by filename
+- `selectDocument(doc)`: Adds documents to selection with visual pills
+- `setupAtMentionDetection()`: Event listeners for input detection and keyboard navigation
+
+**CSS Styling (styles.css):**
+- `.document-dropdown`: Positioned dropdown with smart above/below positioning
+- `.document-item`: Individual document entries with hover states
+- `.document-pill`: Selected document visual indicators
+- Responsive design for mobile and desktop
+
+**Backend Integration:**
+- `/api/documents` endpoint returns document list with metadata
+- `/api/chat` accepts `document_ids` parameter for filtered queries
+- `answer_query()` method enhanced to filter search by specific documents
+
+**Key Features:**
+- Real-time dropdown positioning based on viewport space
+- Keyboard accessibility (arrow keys, Enter, Escape)
+- Multi-document selection with visual feedback
+- Fuzzy search with filename matching
+- Event handling with proper cleanup and error handling
+
 ---
+
+*Last updated: July 2025 - Added @ mention document selection system for targeted querying*
 
 *This documentation represents the current state of the UHG Meeting Document AI System. Update this file when making significant changes to maintain accuracy and usefulness for future development and maintenance.*

@@ -2,7 +2,7 @@ import os
 import json
 import pickle
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Union
 from dataclasses import dataclass, asdict
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -22,14 +22,17 @@ import threading
 import time
 from dotenv import load_dotenv
 
-load_dotenv()
+# Force reload of environment variables
+load_dotenv(override=True)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Check API key availability at startup
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     raise ValueError("Please set OPENAI_API_KEY environment variable")
+logger.info(f"OpenAI API key loaded: {openai_api_key[:15]}...{openai_api_key[-10:]}")
 
 project_id = "openai-meeting-processor"  # Simple project ID for personal use
 tiktoken_cache_dir = os.path.abspath("tiktoken_cache")
@@ -49,9 +52,14 @@ def get_llm(access_token: str = None):
     Get OpenAI LLM client. access_token parameter is kept for compatibility
     but not used since OpenAI uses API key authentication.
     """
+    # Get fresh API key each time to avoid caching issues
+    current_api_key = os.getenv("OPENAI_API_KEY")
+    if not current_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable not set")
+    
     return ChatOpenAI(
         model="gpt-4o",  # Using GPT-4o model
-        openai_api_key=openai_api_key,
+        openai_api_key=current_api_key,
         temperature=0,
         max_tokens=4000,  # Adjust as needed
         request_timeout=60
@@ -63,9 +71,14 @@ def get_embedding_model(access_token: str = None):
     Get OpenAI embedding model. access_token parameter is kept for compatibility
     but not used since OpenAI uses API key authentication.
     """
+    # Get fresh API key each time to avoid caching issues
+    current_api_key = os.getenv("OPENAI_API_KEY")
+    if not current_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable not set")
+    
     return OpenAIEmbeddings(
         model="text-embedding-3-large",  # Using text-embedding-3-large
-        openai_api_key=openai_api_key,
+        openai_api_key=current_api_key,
         dimensions=3072  # text-embedding-3-large dimension
     )
 
@@ -373,6 +386,33 @@ class VectorDatabase:
         conn.close()
         return chunk_ids
     
+    def get_all_documents(self) -> List[Dict[str, Any]]:
+        """Get all documents with metadata for document selection"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT document_id, filename, date, title, content_summary, file_size, chunk_count
+            FROM documents
+            ORDER BY date DESC
+        ''')
+        
+        documents = []
+        for row in cursor.fetchall():
+            doc = {
+                'document_id': row[0],
+                'filename': row[1],
+                'date': row[2],
+                'title': row[3],
+                'content_summary': row[4],
+                'file_size': row[5],
+                'chunk_count': row[6]
+            }
+            documents.append(doc)
+        
+        conn.close()
+        return documents
+    
     def save_index(self):
         """Save FAISS index to disk"""
         if self.index:
@@ -407,6 +447,16 @@ class EnhancedMeetingDocumentProcessor:
         """Refresh clients - simplified for OpenAI (no token refresh needed)"""
         try:
             global access_token, llm, embedding_model
+            
+            # Force reload environment variables
+            load_dotenv(override=True)
+            
+            # Check API key
+            current_api_key = os.getenv("OPENAI_API_KEY")
+            if not current_api_key:
+                raise ValueError("OPENAI_API_KEY not found in environment")
+            
+            logger.info(f"Refreshing with API key: {current_api_key[:15]}...{current_api_key[-10:]}")
             
             # For OpenAI, we don't need to refresh tokens since we use API keys
             # But we can recreate the clients if needed
@@ -720,7 +770,7 @@ class EnhancedMeetingDocumentProcessor:
         # Retrieve chunk details
         return self.vector_db.get_chunks_by_ids(top_chunk_ids)
     
-    def answer_query(self, query: str, context_limit: int = 10) -> str:
+    def answer_query(self, query: str, document_ids: List[str] = None, context_limit: int = 10, include_context: bool = False) -> Union[str, Tuple[str, str]]:
         """Answer user query using hybrid search and intelligent context selection"""
         
         # Detect timeframe filtering
@@ -743,13 +793,21 @@ class EnhancedMeetingDocumentProcessor:
         if detected_timeframe:
             timeframe_docs = self.vector_db.get_documents_by_timeframe(detected_timeframe)
             if not timeframe_docs:
-                return f"I don't have any meeting documents from the {detected_timeframe.replace('_', ' ')} timeframe."
+                error_msg = f"I don't have any meeting documents from the {detected_timeframe.replace('_', ' ')} timeframe."
+                return (error_msg, "") if include_context else error_msg
         
         # Perform hybrid search
         relevant_chunks = self.hybrid_search(query, top_k=context_limit * 3)
         
-        if not relevant_chunks:
-            return "I don't have any relevant meeting documents to answer your question."
+        # Filter chunks by document IDs if specified
+        if document_ids:
+            relevant_chunks = [chunk for chunk in relevant_chunks if chunk.document_id in document_ids]
+            if not relevant_chunks:
+                error_msg = "I don't have any relevant information in the specified documents for your question."
+                return (error_msg, "") if include_context else error_msg
+        elif not relevant_chunks:
+            error_msg = "I don't have any relevant meeting documents to answer your question."
+            return (error_msg, "") if include_context else error_msg
         
         # Group chunks by document and select best representatives
         document_chunks = defaultdict(list)
@@ -766,7 +824,7 @@ class EnhancedMeetingDocumentProcessor:
         # Limit total chunks
         selected_chunks = selected_chunks[:context_limit]
         
-        # Build context
+        # Build context without chunk references
         context_parts = []
         current_doc = None
         
@@ -777,18 +835,16 @@ class EnhancedMeetingDocumentProcessor:
                     context_parts.append("\n" + "="*60 + "\n")
                 
                 context_parts.append(f"Document: {chunk.filename}")
-                context_parts.append(f"Chunk {chunk.chunk_index + 1}:")
                 current_doc = chunk.document_id
-            else:
-                context_parts.append(f"\nChunk {chunk.chunk_index + 1}:")
             
+            # Add content without chunk numbering
             context_parts.append(chunk.content)
         
         context = "\n".join(context_parts)
         
         # Generate answer using OpenAI GPT-4o
         answer_prompt = f"""
-You are an expert AI assistant specializing in analyzing meeting documents. Based on the provided meeting document chunks, give a comprehensive and detailed answer to the user's question.
+You are an expert AI assistant specializing in analyzing meeting documents. Based on the provided meeting document content, give a comprehensive and detailed answer to the user's question.
 
 Meeting Document Context:
 {context}
@@ -798,13 +854,15 @@ User Question: {query}
 Instructions for your response:
 - Provide a thorough, well-structured, and informative answer based on the meeting information
 - Use specific details, dates, names, and facts from the documents
+- Cite specific document names when referencing information from those documents
+- DO NOT reference any "chunks", "chunk numbers", or technical document sections
+- Present information naturally as if reading from complete meeting documents
 - If the question asks for summaries: Provide a consolidated summary across relevant meetings with key points
 - If timeline questions: Organize information chronologically with specific dates when available
 - If about future plans: Focus on upcoming actions, decisions, deadlines, and planned activities
 - If about past events: Highlight what has been discussed, completed, decided, or resolved
 - If about specific topics: Extract and synthesize all relevant information about those topics
 - If about participants: Include their roles, contributions, and responsibilities mentioned
-- Cite specific document names when referencing information
 - If information spans multiple documents, clearly indicate which information comes from which document
 - Be precise about what information is available vs. what might be missing
 - Use bullet points or numbered lists when appropriate for clarity
@@ -820,7 +878,7 @@ Provide a comprehensive answer:
             ]
             
             response = self.llm.invoke(messages)
-            return response.content
+            return (response.content, context) if include_context else response.content
             
         except Exception as e:
             logger.error(f"Error generating answer: {e}")
@@ -832,9 +890,69 @@ Provide a comprehensive answer:
                     HumanMessage(content=answer_prompt)
                 ]
                 response = self.llm.invoke(messages)
-                return response.content
+                return (response.content, context) if include_context else response.content
             except Exception as retry_error:
-                return f"I encountered an error while processing your question. Please try again later. Error details: {str(retry_error)}"
+                error_msg = f"I encountered an error while processing your question. Please try again later. Error details: {str(retry_error)}"
+                return (error_msg, "") if include_context else error_msg
+    
+    def generate_follow_up_questions(self, user_query: str, ai_response: str, context: str) -> List[str]:
+        """Generate follow-up questions based on the user query, AI response, and document context"""
+        try:
+            follow_up_prompt = f"""
+Based on the user's question, the AI response provided, and the meeting document context, generate 4-5 relevant follow-up questions that the user might want to ask next.
+
+User's Question: {user_query}
+
+AI Response: {ai_response}
+
+Meeting Context: {context[:2000]}...
+
+Generate follow-up questions that:
+- Build upon the current conversation topic
+- Explore related aspects mentioned in the documents
+- Ask for deeper details about key points
+- Inquire about timelines, next steps, or implications
+- Connect to other relevant topics in the meetings
+
+Return exactly 4-5 questions, each on a new line, without numbers or bullet points. Make them natural and conversational.
+"""
+
+            messages = [
+                SystemMessage(content="You are an expert at generating relevant follow-up questions for meeting document analysis. Create questions that help users explore the meeting content more deeply."),
+                HumanMessage(content=follow_up_prompt)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            # Parse the response into individual questions
+            questions = [q.strip() for q in response.content.split('\n') if q.strip() and len(q.strip()) > 10]
+            
+            # Ensure we have 4-5 questions
+            if len(questions) > 5:
+                questions = questions[:5]
+            elif len(questions) < 4:
+                # Add generic questions if we don't have enough
+                generic_questions = [
+                    "What were the key decisions made in these meetings?",
+                    "Who are the main stakeholders involved?",
+                    "What are the next steps mentioned?",
+                    "Are there any deadlines or milestones discussed?",
+                    "What challenges or issues were identified?"
+                ]
+                questions.extend(generic_questions[:5-len(questions)])
+            
+            return questions[:5]
+            
+        except Exception as e:
+            logger.error(f"Error generating follow-up questions: {e}")
+            # Return default follow-up questions
+            return [
+                "What were the main decisions made in the meetings?",
+                "Who are the key participants mentioned?",
+                "What are the upcoming deadlines or milestones?",
+                "Are there any action items assigned?",
+                "What challenges were discussed?"
+            ]
     
     def get_meeting_statistics(self) -> Dict[str, Any]:
         """Get simplified statistics about processed meetings"""
