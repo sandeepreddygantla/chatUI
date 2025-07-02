@@ -1,0 +1,230 @@
+2025-07-02 10:56:29,818 - __main__ - ERROR - Failed to import meeting_processor: No module named 'langchain_openai'
+2025-07-02 10:56:29,819 - __main__ - ERROR - Make sure meeting_processor.py is in the same directory
+2025-07-02 10:57:24,426 - __main__ - ERROR - Failed to import meeting_processor: No module named 'langchain_openai'
+2025-07-02 10:57:24,426 - __main__ - ERROR - Make sure meeting_processor.py is in the same directory
+2025-07-02 10:57:46,362 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 10:57:46,930 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 10:57:46,947 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 10:57:47,416 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 10:57:47,429 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 10:57:47,438 - meeting_processor - INFO - Created new FAISS index
+2025-07-02 10:57:47,438 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 10:57:47,438 - __main__ - INFO - Processor initialized successfully
+2025-07-02 10:57:47,492 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.160:5000
+2025-07-02 10:57:47,492 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-02 10:57:47,501 - werkzeug - INFO -  * Restarting with stat
+2025-07-02 10:57:51,663 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 10:57:51,698 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 10:57:51,707 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 10:57:52,174 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 10:57:52,188 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 10:57:52,192 - meeting_processor - INFO - Created new FAISS index
+2025-07-02 10:57:52,192 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 10:57:52,193 - __main__ - INFO - Processor initialized successfully
+2025-07-02 10:57:52,207 - werkzeug - WARNING -  * Debugger is active!
+2025-07-02 10:57:52,236 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-02 11:02:32,968 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 11:02:32,990 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 11:02:33,002 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 11:02:33,467 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 11:02:33,475 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 11:02:33,490 - meeting_processor - INFO - Loaded existing FAISS index with 4 vectors
+2025-07-02 11:02:33,490 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 11:02:33,490 - __main__ - INFO - Processor initialized successfully
+2025-07-02 11:02:33,525 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.160:5000
+2025-07-02 11:02:33,525 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-02 11:02:33,533 - werkzeug - INFO -  * Restarting with stat
+2025-07-02 11:02:37,369 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 11:02:37,394 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 11:02:37,403 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 11:02:37,883 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 11:02:37,890 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 11:02:37,893 - meeting_processor - INFO - Loaded existing FAISS index with 4 vectors
+2025-07-02 11:02:37,893 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 11:02:37,893 - __main__ - INFO - Processor initialized successfully
+2025-07-02 11:02:37,911 - werkzeug - WARNING -  * Debugger is active!
+2025-07-02 11:02:37,939 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-02 11:02:40,675 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:40] "GET / HTTP/1.1" 200 -
+2025-07-02 11:02:41,083 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:41] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 11:02:41,086 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:41] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 11:02:41,108 - __main__ - INFO - Stats request received
+2025-07-02 11:02:41,117 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:02:41,118 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:41] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:02:41,125 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:02:41,125 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:41] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:02:42,150 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "GET / HTTP/1.1" 200 -
+2025-07-02 11:02:42,189 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:02:42,190 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:02:42,203 - __main__ - INFO - Stats request received
+2025-07-02 11:02:42,208 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:02:42,209 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:02:42,212 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:02:42,213 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:02:42,220 - __main__ - INFO - Stats request received
+2025-07-02 11:02:42,227 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:02:42,228 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:02:42] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:21:03,791 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:03] "GET / HTTP/1.1" 200 -
+2025-07-02 11:21:03,820 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:03] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 11:21:03,820 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:03] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 11:21:03,907 - __main__ - INFO - Stats request received
+2025-07-02 11:21:03,910 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:21:03,910 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:03] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:21:03,925 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:21:03,925 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:03] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:21:17,915 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:17] "GET / HTTP/1.1" 200 -
+2025-07-02 11:21:17,936 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:17] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:21:17,936 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:17] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:21:17,958 - __main__ - INFO - Stats request received
+2025-07-02 11:21:17,960 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:21:17,960 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:17] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:21:17,975 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:21:17,975 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:21:17] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:26:07,731 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:07] "GET / HTTP/1.1" 200 -
+2025-07-02 11:26:07,760 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:07] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 11:26:07,760 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:07] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 11:26:07,843 - __main__ - INFO - Stats request received
+2025-07-02 11:26:07,854 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:26:07,855 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:07] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:26:07,866 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:26:07,866 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:07] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:26:08,752 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:08] "GET / HTTP/1.1" 200 -
+2025-07-02 11:26:08,804 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:08] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:26:08,805 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:08] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:26:08,817 - __main__ - INFO - Stats request received
+2025-07-02 11:26:08,820 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:26:08,820 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:08] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:26:08,827 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:26:08,828 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:26:08] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:26:56,420 - __main__ - INFO - Chat request received: What are the main topics discussed in meetings?...
+2025-07-02 11:26:56,420 - __main__ - INFO - Vector database size: 4
+2025-07-02 11:26:56,420 - __main__ - INFO - Generating response using processor
+2025-07-02 11:27:00,947 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-07-02 11:27:32,530 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-02 11:27:32,589 - __main__ - INFO - Response generated, length: 2961
+2025-07-02 11:27:32,592 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:27:32] "POST /api/chat HTTP/1.1" 200 -
+2025-07-02 11:31:17,575 - __main__ - INFO - Stats request received
+2025-07-02 11:31:17,588 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:31:17,588 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:31:17] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:01,524 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:01] "GET / HTTP/1.1" 200 -
+2025-07-02 11:54:01,546 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:01] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 11:54:01,555 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:01] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:54:01,638 - __main__ - INFO - Stats request received
+2025-07-02 11:54:01,641 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:01,641 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:01] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:01,646 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:54:01,646 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:01] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:54:02,539 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:02] "GET / HTTP/1.1" 200 -
+2025-07-02 11:54:02,573 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:02] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:54:02,574 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:02] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:54:02,584 - __main__ - INFO - Stats request received
+2025-07-02 11:54:02,587 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:02,587 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:02] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:02,589 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:54:02,589 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:02] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:54:03,742 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "GET / HTTP/1.1" 200 -
+2025-07-02 11:54:03,779 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:54:03,779 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:54:03,795 - __main__ - INFO - Stats request received
+2025-07-02 11:54:03,798 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:54:03,799 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:54:03,799 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:03,799 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:03,803 - __main__ - INFO - Stats request received
+2025-07-02 11:54:03,807 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:03,807 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:03] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:25,182 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET / HTTP/1.1" 200 -
+2025-07-02 11:54:25,226 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:54:25,227 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:54:25,229 - __main__ - INFO - Stats request received
+2025-07-02 11:54:25,229 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:54:25,229 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:54:25,241 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:25,241 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:25,244 - __main__ - INFO - Stats request received
+2025-07-02 11:54:25,252 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:25,253 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:25,533 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET / HTTP/1.1" 200 -
+2025-07-02 11:54:25,561 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 11:54:25,561 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 11:54:25,572 - __main__ - INFO - Stats request received
+2025-07-02 11:54:25,576 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 11:54:25,577 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 11:54:25,577 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:25,577 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 11:54:25,577 - __main__ - INFO - Stats request received
+2025-07-02 11:54:25,596 - __main__ - INFO - Stats generated successfully
+2025-07-02 11:54:25,597 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 11:54:25] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:06:02,313 - werkzeug - INFO -  * Detected change in 'C:\\Users\\reddy\\Downloads\\AI assistant old\\flask_app.py', reloading
+2025-07-02 12:06:03,257 - werkzeug - INFO -  * Restarting with stat
+2025-07-02 12:06:07,983 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 12:06:08,013 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 12:06:08,021 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 12:06:08,554 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 12:06:08,560 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 12:06:08,570 - meeting_processor - INFO - Loaded existing FAISS index with 4 vectors
+2025-07-02 12:06:08,570 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 12:06:08,570 - __main__ - INFO - Processor initialized successfully
+2025-07-02 12:06:08,590 - werkzeug - WARNING -  * Debugger is active!
+2025-07-02 12:06:08,618 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-02 12:07:08,094 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET / HTTP/1.1" 200 -
+2025-07-02 12:07:08,262 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 12:07:08,262 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/icons/logo.svg HTTP/1.1" 200 -
+2025-07-02 12:07:08,334 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 12:07:08,354 - __main__ - INFO - Stats request received
+2025-07-02 12:07:08,357 - __main__ - INFO - Stats generated successfully
+2025-07-02 12:07:08,357 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:07:08,379 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 12:07:08,380 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 12:07:08,381 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/icons/logo.svg?t=1751476028350 HTTP/1.1" 200 -
+2025-07-02 12:07:08,450 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/icons/favicon.png HTTP/1.1" 200 -
+2025-07-02 12:07:08,458 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:07:08] "GET /static/icons/favicon.svg HTTP/1.1" 200 -
+2025-07-02 12:10:08,121 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "GET / HTTP/1.1" 200 -
+2025-07-02 12:10:08,153 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-02 12:10:08,154 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 12:10:08,181 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "GET /static/icons/Optum-logo.png HTTP/1.1" 200 -
+2025-07-02 12:10:08,231 - __main__ - INFO - Stats request received
+2025-07-02 12:10:08,241 - __main__ - INFO - Stats generated successfully
+2025-07-02 12:10:08,242 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:10:08,251 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 12:10:08,251 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 12:10:08,305 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:10:08] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-02 12:10:35,449 - werkzeug - INFO -  * Detected change in 'C:\\Users\\reddy\\Downloads\\AI assistant old\\flask_app.py', reloading
+2025-07-02 12:10:35,754 - werkzeug - INFO -  * Restarting with stat
+2025-07-02 12:10:40,261 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-02 12:10:40,292 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-02 12:10:40,299 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-02 12:10:40,817 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-02 12:10:40,825 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-02 12:10:40,829 - meeting_processor - INFO - Loaded existing FAISS index with 4 vectors
+2025-07-02 12:10:40,829 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-02 12:10:40,830 - __main__ - INFO - Processor initialized successfully
+2025-07-02 12:10:40,850 - werkzeug - WARNING -  * Debugger is active!
+2025-07-02 12:10:40,880 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-02 12:11:33,060 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "GET / HTTP/1.1" 200 -
+2025-07-02 12:11:33,244 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-02 12:11:33,248 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 12:11:33,248 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 12:11:33,265 - __main__ - INFO - Stats request received
+2025-07-02 12:11:33,268 - __main__ - INFO - Stats generated successfully
+2025-07-02 12:11:33,268 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:11:33,272 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 12:11:33,272 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 12:11:33,310 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:11:33] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-02 12:17:09,656 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "GET / HTTP/1.1" 200 -
+2025-07-02 12:17:09,691 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 12:17:09,692 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-02 12:17:09,775 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-02 12:17:09,792 - __main__ - INFO - Stats request received
+2025-07-02 12:17:09,795 - __main__ - INFO - Stats generated successfully
+2025-07-02 12:17:09,796 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:17:09,801 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 12:17:09,801 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 12:17:09,856 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-02 12:17:21,665 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:21] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-02 12:17:30,561 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:30] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -

@@ -1,0 +1,50 @@
+# Core Flask Web Framework
+Flask
+# OpenAI Integration
+openai
+langchain
+langchain-core
+langchain_openai
+
+# Vector Database and Search
+faiss-cpu
+numpy
+scikit-learn
+
+
+# Document Processing
+python-docx
+PyPDF2
+
+# Data Processing
+pandas
+
+# HTTP Requests
+httpx
+requests
+
+# Text Processing
+tiktoken
+
+# Environment Variables
+python-dotenv
+
+# Data Validation
+pydantic
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

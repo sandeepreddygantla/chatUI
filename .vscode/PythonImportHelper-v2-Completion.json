@@ -1,0 +1,572 @@
+[
+    {
+        "label": "Flask",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "render_template",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "request",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "jsonify",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "secure_filename",
+        "importPath": "werkzeug.utils",
+        "description": "werkzeug.utils",
+        "isExtraImport": true,
+        "detail": "werkzeug.utils",
+        "documentation": {}
+    },
+    {
+        "label": "shutil",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shutil",
+        "description": "shutil",
+        "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "pickle",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pickle",
+        "description": "pickle",
+        "detail": "pickle",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "asdict",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "cosine_similarity",
+        "importPath": "sklearn.metrics.pairwise",
+        "description": "sklearn.metrics.pairwise",
+        "isExtraImport": true,
+        "detail": "sklearn.metrics.pairwise",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "httpx",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "httpx",
+        "description": "httpx",
+        "detail": "httpx",
+        "documentation": {}
+    },
+    {
+        "label": "ChatOpenAI",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIEmbeddings",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "HumanMessage",
+        "importPath": "langchain.schema",
+        "description": "langchain.schema",
+        "isExtraImport": true,
+        "detail": "langchain.schema",
+        "documentation": {}
+    },
+    {
+        "label": "SystemMessage",
+        "importPath": "langchain.schema",
+        "description": "langchain.schema",
+        "isExtraImport": true,
+        "detail": "langchain.schema",
+        "documentation": {}
+    },
+    {
+        "label": "RecursiveCharacterTextSplitter",
+        "importPath": "langchain.text_splitter",
+        "description": "langchain.text_splitter",
+        "isExtraImport": true,
+        "detail": "langchain.text_splitter",
+        "documentation": {}
+    },
+    {
+        "label": "sqlite3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlite3",
+        "description": "sqlite3",
+        "detail": "sqlite3",
+        "documentation": {}
+    },
+    {
+        "label": "faiss",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "faiss",
+        "description": "faiss",
+        "detail": "faiss",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_processor",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)\n        logger.info(\"Processor initialized successfully\")\n        return True\n    except Exception as e:\n        logger.error(f\"Failed to initialize processor: {e}\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "index",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def index():\n    \"\"\"Main chat interface\"\"\"\n    return render_template('chat.html')\n@app.route('/api/upload', methods=['POST'])\ndef upload_files():\n    \"\"\"Handle file uploads with detailed result tracking\"\"\"\n    try:\n        logger.info(\"Upload request received\")\n        if 'files' not in request.files:\n            logger.error(\"No files in request\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "upload_files",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def upload_files():\n    \"\"\"Handle file uploads with detailed result tracking\"\"\"\n    try:\n        logger.info(\"Upload request received\")\n        if 'files' not in request.files:\n            logger.error(\"No files in request\")\n            return jsonify({'success': False, 'error': 'No files provided'}), 400\n        files = request.files.getlist('files')\n        if not files or all(f.filename == '' for f in files):\n            logger.error(\"No files selected\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "chat",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def chat():\n    \"\"\"Handle chat messages\"\"\"\n    try:\n        data = request.get_json()\n        message = data.get('message', '').strip()\n        logger.info(f\"Chat request received: {message[:100]}...\")\n        if not message:\n            return jsonify({'success': False, 'error': 'No message provided'}), 400\n        if not processor:\n            logger.error(\"Processor not initialized for chat\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "get_stats",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def get_stats():\n    \"\"\"Get system statistics\"\"\"\n    try:\n        logger.info(\"Stats request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for stats\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        stats = processor.get_meeting_statistics()\n        if \"error\" in stats:\n            logger.error(f\"Error in stats: {stats['error']}\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "refresh_system",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def refresh_system():\n    \"\"\"Refresh the system\"\"\"\n    try:\n        logger.info(\"System refresh requested\")\n        if processor:\n            processor.refresh_clients()\n            logger.info(\"System refreshed successfully\")\n            return jsonify({'success': True, 'message': 'System refreshed successfully'})\n        else:\n            logger.error(\"Processor not initialized for refresh\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "test_system",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def test_system():\n    \"\"\"Test endpoint to check if system is working\"\"\"\n    try:\n        status = {\n            'processor_initialized': processor is not None,\n            'vector_db_available': False,\n            'vector_size': 0\n        }\n        if processor:\n            try:",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Import your existing classes\ntry:\n    from meeting_processor import EnhancedMeetingDocumentProcessor\n    logger.info(\"Successfully imported meeting_processor\")\nexcept ImportError as e:\n    logger.error(f\"Failed to import meeting_processor: {e}\")\n    logger.error(\"Make sure meeting_processor.py is in the same directory\")\n    exit(1)\n# Create Flask app with proper static folder configuration",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "app = Flask(__name__, \n           static_folder='static',  # Explicitly set static folder\n           static_url_path='/static',  # Set static URL path\n           template_folder='templates')  # Set template folder\napp.config['SECRET_KEY'] = 'uhg-meeting-ai-secret-key'\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "app.config['SECRET_KEY']",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "app.config['SECRET_KEY'] = 'uhg-meeting-ai-secret-key'\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "app.config['UPLOAD_FOLDER']",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "app.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "app.config['MAX_CONTENT_LENGTH']",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)\n        logger.info(\"Processor initialized successfully\")",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "processor",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "processor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)\n        logger.info(\"Processor initialized successfully\")\n        return True\n    except Exception as e:",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "DocumentChunk",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int\n    content: str\n    start_char: int\n    end_char: int\n    embedding: Optional[np.ndarray] = None",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "MeetingDocument",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class MeetingDocument:\n    \"\"\"Structure to hold meeting document information\"\"\"\n    document_id: str\n    filename: str\n    date: datetime\n    title: str\n    content: str\n    content_summary: str  # Condensed summary for metadata\n    main_topics: List[str]\n    past_events: List[str]",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "VectorDatabase",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class VectorDatabase:\n    \"\"\"Vector database using FAISS for similarity search and SQLite for metadata\"\"\"\n    def __init__(self, db_path: str = \"meeting_documents.db\", index_path: str = \"vector_index.faiss\"):\n        self.db_path = db_path\n        self.index_path = index_path\n        self.dimension = 3072  # text-embedding-3-large dimension\n        self.index = None\n        self.chunk_metadata = {}\n        self.document_metadata = {}\n        self._init_database()",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "EnhancedMeetingDocumentProcessor",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class EnhancedMeetingDocumentProcessor:\n    \"\"\"Enhanced Meeting Document Processor with Vector Database Support\"\"\"\n    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):\n        \"\"\"Initialize the enhanced processor\"\"\"\n        global llm, embedding_model, access_token\n        self.llm = llm\n        self.embedding_model = embedding_model\n        self.access_token = access_token\n        self.token_expiry = datetime.now() + timedelta(hours=1)\n        # Text splitter for chunking",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "get_access_token",
+        "kind": 2,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "def get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.\n    OpenAI API uses API key authentication, not tokens.\n    \"\"\"\n    return \"dummy_token_for_compatibility\"\n# --- OpenAI LLM Client ---\ndef get_llm(access_token: str = None):\n    \"\"\"\n    Get OpenAI LLM client. access_token parameter is kept for compatibility",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "get_llm",
+        "kind": 2,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "def get_llm(access_token: str = None):\n    \"\"\"\n    Get OpenAI LLM client. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    return ChatOpenAI(\n        model=\"gpt-4o\",  # Using GPT-4o model\n        openai_api_key=openai_api_key,\n        temperature=0,\n        max_tokens=4000,  # Adjust as needed",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "get_embedding_model",
+        "kind": 2,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "def get_embedding_model(access_token: str = None):\n    \"\"\"\n    Get OpenAI embedding model. access_token parameter is kept for compatibility\n    but not used since OpenAI uses API key authentication.\n    \"\"\"\n    return OpenAIEmbeddings(\n        model=\"text-embedding-3-large\",  # Using text-embedding-3-large\n        openai_api_key=openai_api_key,\n        dimensions=3072  # text-embedding-3-large dimension\n    )",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "def main():\n    \"\"\"Main function for Meeting Document AI System with OpenAI\"\"\"\n    print(\"🚀 Meeting Document AI System v3.0 (OpenAI Edition)\")\n    print(\"📊 Features: Vector Database, Hybrid Search, Chunking Support\")\n    print(\"🔑 Using OpenAI API (GPT-4o + text-embedding-3-large)\")\n    print(\"=\" * 60)\n    try:\n        # Check OpenAI API key\n        if not openai_api_key:\n            print(\"❌ Error: OPENAI_API_KEY environment variable not set\")",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nopenai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "openai_api_key",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "openai_api_key = os.getenv(\"OPENAI_API_KEY\")\nif not openai_api_key:\n    raise ValueError(\"Please set OPENAI_API_KEY environment variable\")\nproject_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "project_id",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "project_id = \"openai-meeting-processor\"  # Simple project ID for personal use\ntiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.\n    OpenAI API uses API key authentication, not tokens.\n    \"\"\"\n    return \"dummy_token_for_compatibility\"",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "tiktoken_cache_dir",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "tiktoken_cache_dir = os.path.abspath(\"tiktoken_cache\")\nos.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.\n    OpenAI API uses API key authentication, not tokens.\n    \"\"\"\n    return \"dummy_token_for_compatibility\"\n# --- OpenAI LLM Client ---",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"TIKTOKEN_CACHE_DIR\"]",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "os.environ[\"TIKTOKEN_CACHE_DIR\"] = tiktoken_cache_dir\n# --- Dummy Auth Function (for compatibility) ---\ndef get_access_token():\n    \"\"\"\n    Dummy function to maintain compatibility with existing code.\n    OpenAI API uses API key authentication, not tokens.\n    \"\"\"\n    return \"dummy_token_for_compatibility\"\n# --- OpenAI LLM Client ---\ndef get_llm(access_token: str = None):",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "access_token",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "access_token = get_access_token()\nembedding_model = get_embedding_model(access_token)\nllm = get_llm(access_token)\n@dataclass\nclass DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "embedding_model",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "embedding_model = get_embedding_model(access_token)\nllm = get_llm(access_token)\n@dataclass\nclass DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int\n    content: str",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "llm",
+        "kind": 5,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "llm = get_llm(access_token)\n@dataclass\nclass DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int\n    content: str\n    start_char: int",
+        "detail": "meeting_processor",
+        "documentation": {}
+    }
+]
