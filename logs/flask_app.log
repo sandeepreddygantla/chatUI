@@ -228,3 +228,28 @@
 2025-07-02 12:17:09,856 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:09] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
 2025-07-02 12:17:21,665 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:21] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
 2025-07-02 12:17:30,561 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:17:30] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-02 12:34:57,934 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:57] "GET / HTTP/1.1" 200 -
+2025-07-02 12:34:57,999 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:57] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-02 12:34:58,012 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:58] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-02 12:34:58,076 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:58] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-02 12:34:58,083 - __main__ - INFO - Stats request received
+2025-07-02 12:34:58,094 - __main__ - INFO - Stats generated successfully
+2025-07-02 12:34:58,101 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-02 12:34:58,101 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:58] "GET /api/stats HTTP/1.1" 200 -
+2025-07-02 12:34:58,101 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:58] "GET /api/test HTTP/1.1" 200 -
+2025-07-02 12:34:58,184 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:34:58] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-02 12:35:00,895 - __main__ - INFO - Chat request received: hello...
+2025-07-02 12:35:00,896 - __main__ - INFO - Vector database size: 4
+2025-07-02 12:35:00,897 - __main__ - INFO - Generating response using processor
+2025-07-02 12:35:01,685 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 401 Unauthorized"
+2025-07-02 12:35:01,687 - meeting_processor - ERROR - Error in semantic search: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************gIMA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-07-02 12:35:01,697 - __main__ - INFO - Response generated, length: 68
+2025-07-02 12:35:01,697 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:35:01] "POST /api/chat HTTP/1.1" 200 -
+2025-07-02 12:35:09,201 - __main__ - INFO - Chat request received: What are the main topics discussed in meetings?...
+2025-07-02 12:35:09,201 - __main__ - INFO - Vector database size: 4
+2025-07-02 12:35:09,201 - __main__ - INFO - Generating response using processor
+2025-07-02 12:35:09,407 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 401 Unauthorized"
+2025-07-02 12:35:09,407 - meeting_processor - ERROR - Error in semantic search: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************gIMA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-07-02 12:35:20,960 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-02 12:35:20,979 - __main__ - INFO - Response generated, length: 3258
+2025-07-02 12:35:20,979 - werkzeug - INFO - 127.0.0.1 - - [02/Jul/2025 12:35:20] "POST /api/chat HTTP/1.1" 200 -
