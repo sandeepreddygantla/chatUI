@@ -3150,3 +3150,86 @@
 2025-07-08 19:52:11,715 - __main__ - INFO - Processor initialized successfully
 2025-07-08 19:52:11,732 - werkzeug - WARNING -  * Debugger is active!
 2025-07-08 19:52:11,766 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-09 12:26:55,520 - werkzeug - INFO -  * Detected change in 'C:\\Users\\reddy\\Downloads\\AI assistant old\\meeting_processor.py', reloading
+2025-07-09 12:26:55,892 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 12:27:12,231 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-09 12:27:12,609 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-09 12:27:12,609 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-09 12:27:12,630 - meeting_processor - INFO - OpenAI API key loaded: sk-proj-P4pUW3-...5Bi3wohgMA
+2025-07-09 12:27:13,111 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-09 12:27:13,122 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-09 12:27:13,127 - meeting_processor - INFO - Loaded existing FAISS index with 18 vectors
+2025-07-09 12:27:13,127 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-09 12:27:13,127 - __main__ - INFO - Processor initialized successfully
+2025-07-09 12:27:13,139 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 12:27:13,184 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-09 12:27:53,670 - werkzeug - INFO -  * Detected change in 'C:\\Users\\reddy\\Downloads\\AI assistant old\\meeting_processor.py', reloading
+2025-07-09 12:27:53,882 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 12:27:57,754 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-09 12:27:57,776 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-09 12:27:57,783 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-09 12:27:57,792 - meeting_processor - INFO - OpenAI API key loaded: sk-proj-P4pUW3-...5Bi3wohgMA
+2025-07-09 12:27:58,234 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-09 12:27:58,241 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-09 12:27:58,249 - meeting_processor - INFO - Loaded existing FAISS index with 18 vectors
+2025-07-09 12:27:58,249 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-09 12:27:58,249 - __main__ - INFO - Processor initialized successfully
+2025-07-09 12:27:58,266 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 12:27:58,321 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-09 12:31:50,735 - werkzeug - INFO -  * Detected change in 'C:\\Users\\reddy\\Downloads\\AI assistant old\\meeting_processor.py', reloading
+2025-07-09 12:31:50,977 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 12:31:54,858 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-07-09 12:31:54,886 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-07-09 12:31:54,893 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-07-09 12:31:54,902 - meeting_processor - INFO - OpenAI API key loaded: sk-proj-P4pUW3-...5Bi3wohgMA
+2025-07-09 12:31:55,346 - __main__ - INFO - Successfully imported meeting_processor
+2025-07-09 12:31:55,354 - __main__ - INFO - Initializing Enhanced Meeting Document Processor...
+2025-07-09 12:31:55,362 - meeting_processor - INFO - Loaded existing FAISS index with 18 vectors
+2025-07-09 12:31:55,362 - meeting_processor - INFO - Enhanced Meeting Document Processor initialized with OpenAI
+2025-07-09 12:31:55,362 - __main__ - INFO - Processor initialized successfully
+2025-07-09 12:31:55,378 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 12:31:55,419 - werkzeug - INFO -  * Debugger PIN: 731-319-019
+2025-07-09 12:34:34,301 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:34:34] "[32mGET / HTTP/1.1[0m" 302 -
+2025-07-09 12:34:34,568 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:34:34] "GET /login HTTP/1.1" 200 -
+2025-07-09 12:34:34,737 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:34:34] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-09 12:34:34,904 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:34:34] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-09 12:40:38,900 - __main__ - INFO - User logged in: sgantla001
+2025-07-09 12:40:38,900 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:38] "POST /login HTTP/1.1" 200 -
+2025-07-09 12:40:39,968 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:39] "GET / HTTP/1.1" 200 -
+2025-07-09 12:40:40,302 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-09 12:40:40,302 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-09 12:40:40,383 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-09 12:40:40,567 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-09 12:40:40,711 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 18}
+2025-07-09 12:40:40,711 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/test HTTP/1.1" 200 -
+2025-07-09 12:40:40,718 - __main__ - INFO - Stats request received
+2025-07-09 12:40:40,721 - __main__ - INFO - Documents request received
+2025-07-09 12:40:40,721 - __main__ - INFO - Meetings request received
+2025-07-09 12:40:40,721 - __main__ - INFO - Projects request received
+2025-07-09 12:40:40,721 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/documents HTTP/1.1" 200 -
+2025-07-09 12:40:40,731 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-09 12:40:40,731 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/projects HTTP/1.1" 200 -
+2025-07-09 12:40:40,731 - __main__ - INFO - Stats generated successfully
+2025-07-09 12:40:40,734 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/stats HTTP/1.1" 200 -
+2025-07-09 12:40:40,881 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:40] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-09 12:40:41,040 - __main__ - INFO - Documents request received
+2025-07-09 12:40:41,043 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:41] "GET /api/documents HTTP/1.1" 200 -
+2025-07-09 12:40:41,052 - __main__ - INFO - Stats request received
+2025-07-09 12:40:41,059 - __main__ - INFO - Stats generated successfully
+2025-07-09 12:40:41,061 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:41] "GET /api/stats HTTP/1.1" 200 -
+2025-07-09 12:40:41,357 - __main__ - INFO - Documents request received
+2025-07-09 12:40:41,358 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:41] "GET /api/documents HTTP/1.1" 200 -
+2025-07-09 12:40:43,920 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:40:43] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-09 12:40:57,423 - __main__ - INFO - Chat request received: Summarize all meetings...
+2025-07-09 12:40:57,431 - __main__ - INFO - Vector database size: 18
+2025-07-09 12:40:57,431 - __main__ - INFO - Generating response using processor
+2025-07-09 12:40:57,432 - meeting_processor - INFO - Detected comprehensive project summary query
+2025-07-09 12:40:57,432 - meeting_processor - INFO - Generating comprehensive project summary for user user_20250708_115828_sgantla001, project None
+2025-07-09 12:40:57,434 - meeting_processor - INFO - Found 3 files to process for comprehensive summary
+2025-07-09 12:40:57,434 - meeting_processor - INFO - Processing 3 files individually
+2025-07-09 12:41:08,253 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-09 12:41:08,267 - __main__ - INFO - Response generated, length: 3222
+2025-07-09 12:41:12,151 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-09 12:41:12,155 - __main__ - INFO - Generated 5 follow-up questions
+2025-07-09 12:41:12,155 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:41:12] "POST /api/chat HTTP/1.1" 200 -
+2025-07-09 12:42:25,068 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 12:42:25] "GET /api/auth/status HTTP/1.1" 200 -

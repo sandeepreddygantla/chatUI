@@ -1170,6 +1170,115 @@ class VectorDatabase:
         conn.close()
         return meetings
     
+    def get_all_documents(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all documents for a user"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT document_id, filename, date, title, content_summary, 
+                   main_topics, past_events, future_actions, participants,
+                   chunk_count, file_size, user_id, meeting_id, project_id
+            FROM documents 
+            WHERE user_id = ?
+            ORDER BY date DESC
+        ''', (user_id,))
+        
+        documents = []
+        for row in cursor.fetchall():
+            doc_dict = {
+                'document_id': row[0],
+                'filename': row[1],
+                'date': row[2],
+                'title': row[3],
+                'content_summary': row[4],
+                'main_topics': json.loads(row[5] or '[]'),
+                'past_events': json.loads(row[6] or '[]'),
+                'future_actions': json.loads(row[7] or '[]'),
+                'participants': json.loads(row[8] or '[]'),
+                'chunk_count': row[9],
+                'file_size': row[10],
+                'user_id': row[11],
+                'meeting_id': row[12],
+                'project_id': row[13]
+            }
+            documents.append(doc_dict)
+        
+        conn.close()
+        return documents
+    
+    def get_project_documents(self, project_id: str, user_id: str) -> List[Dict[str, Any]]:
+        """Get all documents for a specific project"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT document_id, filename, date, title, content_summary, 
+                   main_topics, past_events, future_actions, participants,
+                   chunk_count, file_size, user_id, meeting_id, project_id
+            FROM documents 
+            WHERE project_id = ? AND user_id = ?
+            ORDER BY date DESC
+        ''', (project_id, user_id))
+        
+        documents = []
+        for row in cursor.fetchall():
+            doc_dict = {
+                'document_id': row[0],
+                'filename': row[1],
+                'date': row[2],
+                'title': row[3],
+                'content_summary': row[4],
+                'main_topics': json.loads(row[5] or '[]'),
+                'past_events': json.loads(row[6] or '[]'),
+                'future_actions': json.loads(row[7] or '[]'),
+                'participants': json.loads(row[8] or '[]'),
+                'chunk_count': row[9],
+                'file_size': row[10],
+                'user_id': row[11],
+                'meeting_id': row[12],
+                'project_id': row[13]
+            }
+            documents.append(doc_dict)
+        
+        conn.close()
+        return documents
+    
+    def get_document_metadata(self, document_id: str) -> Dict[str, Any]:
+        """Get metadata for a specific document"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT document_id, filename, date, title, content_summary, 
+                   main_topics, past_events, future_actions, participants,
+                   chunk_count, file_size, user_id, meeting_id, project_id
+            FROM documents 
+            WHERE document_id = ?
+        ''', (document_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                'document_id': row[0],
+                'filename': row[1],
+                'date': row[2],
+                'title': row[3],
+                'content_summary': row[4],
+                'main_topics': json.loads(row[5] or '[]'),
+                'past_events': json.loads(row[6] or '[]'),
+                'future_actions': json.loads(row[7] or '[]'),
+                'participants': json.loads(row[8] or '[]'),
+                'chunk_count': row[9],
+                'file_size': row[10],
+                'user_id': row[11],
+                'meeting_id': row[12],
+                'project_id': row[13]
+            }
+        return None
+    
     def save_index(self):
         """Save FAISS index to disk"""
         if self.index:
@@ -1550,6 +1659,14 @@ class EnhancedMeetingDocumentProcessor:
         # Check if this is a summary query and no specific documents are selected
         is_summary_query = self.detect_summary_query(query)
         
+        # Check if this is a comprehensive project summary query
+        is_project_summary_query = self.detect_project_summary_query(query)
+        
+        # Handle comprehensive project summary requests
+        if is_project_summary_query and not document_ids:
+            logger.info("Detected comprehensive project summary query")
+            return self._generate_comprehensive_project_summary(query, user_id, project_id, include_context)
+        
         # Handle enhanced @ mention filters
         if meeting_ids:
             logger.info(f"Enhanced meeting filters: {meeting_ids}")
@@ -1814,6 +1931,310 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
         except Exception as e:
             logger.error(f"Error generating statistics: {e}")
             return {"error": f"Failed to generate statistics: {e}"}
+
+    def detect_project_summary_query(self, query: str) -> bool:
+        """Detect if the query is asking for a comprehensive project summary"""
+        project_summary_keywords = [
+            'project summary', 'project summaries', 'summarize project', 'summarize the project',
+            'summary of project', 'summary of all files', 'all files summary', 'comprehensive summary',
+            'summarize all meetings', 'all meetings summary', 'overall project', 'entire project',
+            'project overview', 'complete summary', 'full summary', 'all documents summary',
+            'project recap', 'project highlights', 'all files in project', 'everything in project'
+        ]
+        
+        query_lower = query.lower()
+        for keyword in project_summary_keywords:
+            if keyword in query_lower:
+                return True
+        return False
+
+    def _generate_comprehensive_project_summary(self, query: str, user_id: str, project_id: str = None, include_context: bool = False) -> Union[str, Tuple[str, str]]:
+        """Generate comprehensive project summary that processes ALL files in a project"""
+        try:
+            logger.info(f"Generating comprehensive project summary for user {user_id}, project {project_id}")
+            
+            # Get all documents in the project
+            if project_id:
+                documents = self.vector_db.get_project_documents(project_id, user_id)
+            else:
+                documents = self.vector_db.get_all_documents(user_id)
+            
+            if not documents:
+                error_msg = "No documents found in the project to summarize."
+                return (error_msg, "") if include_context else error_msg
+            
+            total_files = len(documents)
+            logger.info(f"Found {total_files} files to process for comprehensive summary")
+            
+            # Determine processing strategy based on file count
+            if total_files <= 15:
+                # Tier 1: Process all files individually
+                return self._process_all_files_individually(documents, query, include_context)
+            elif total_files <= 50:
+                # Tier 2: Batch processing with smart sampling
+                return self._process_files_with_batching(documents, query, include_context)
+            else:
+                # Tier 3: Hierarchical summarization for 50+ files
+                return self._process_files_hierarchically(documents, query, include_context)
+                
+        except Exception as e:
+            logger.error(f"Error generating comprehensive project summary: {e}")
+            error_msg = f"I encountered an error generating the comprehensive project summary: {str(e)}"
+            return (error_msg, "") if include_context else error_msg
+
+    def _process_all_files_individually(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
+        """Process all files individually for projects with <= 15 files"""
+        try:
+            logger.info(f"Processing {len(documents)} files individually")
+            
+            # Get comprehensive content from all documents
+            all_summaries = []
+            context_parts = []
+            
+            for doc in documents:
+                # Get document metadata
+                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
+                if doc_info:
+                    file_summary = f"**{doc_info['filename']}** ({doc_info['date'][:10]}): {doc_info['content_summary']}"
+                    all_summaries.append(file_summary)
+                    
+                    # Add key content for context
+                    context_parts.append(f"Document: {doc_info['filename']}")
+                    context_parts.append(f"Date: {doc_info['date'][:10]}")
+                    context_parts.append(f"Summary: {doc_info['content_summary']}")
+                    context_parts.append("="*50)
+            
+            context = "\n".join(context_parts)
+            
+            # Generate comprehensive summary
+            summary_prompt = f"""
+You are an expert project analyst. Based on the following {len(documents)} meeting documents, provide a comprehensive project summary.
+
+Document Summaries:
+{chr(10).join(all_summaries)}
+
+User Query: {query}
+
+Please provide a comprehensive summary that includes:
+1. **Project Overview**: Overall theme and purpose across all meetings
+2. **Key Decisions**: Major decisions made across all {len(documents)} files
+3. **Progress Timeline**: Chronological progression of events and milestones
+4. **Participants & Roles**: All participants mentioned and their key contributions
+5. **Action Items**: All future actions and assignments mentioned
+6. **Challenges & Solutions**: Problems identified and solutions proposed
+7. **File Summary**: Brief mention of what each file covered (all {len(documents)} files)
+
+This summary covers ALL {len(documents)} files in the project. Be thorough and comprehensive.
+"""
+
+            messages = [
+                SystemMessage(content=f"You are a comprehensive project analyst. Provide thorough summaries covering all {len(documents)} files in the project."),
+                HumanMessage(content=summary_prompt)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            # Add file count information
+            final_response = f"**Comprehensive Project Summary** (Processed {len(documents)} files)\n\n{response.content}"
+            
+            return (final_response, context) if include_context else final_response
+            
+        except Exception as e:
+            logger.error(f"Error in individual file processing: {e}")
+            error_msg = f"Error processing {len(documents)} files individually: {str(e)}"
+            return (error_msg, "") if include_context else error_msg
+
+    def _process_files_with_batching(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
+        """Process files with smart batching for projects with 16-50 files"""
+        try:
+            logger.info(f"Processing {len(documents)} files with batching strategy")
+            
+            # Process documents in batches of 10
+            batch_size = 10
+            batch_summaries = []
+            context_parts = []
+            
+            for i in range(0, len(documents), batch_size):
+                batch = documents[i:i + batch_size]
+                batch_summary = self._process_document_batch(batch, f"Batch {i//batch_size + 1}")
+                batch_summaries.append(batch_summary)
+                
+                # Add to context
+                context_parts.append(f"Batch {i//batch_size + 1} ({len(batch)} files)")
+                context_parts.append(batch_summary)
+                context_parts.append("="*60)
+            
+            context = "\n".join(context_parts)
+            
+            # Generate final comprehensive summary from batch summaries
+            final_summary_prompt = f"""
+You are a senior project analyst. Based on the following batch summaries from {len(documents)} files, create a comprehensive project summary.
+
+Batch Summaries:
+{chr(10).join(batch_summaries)}
+
+User Query: {query}
+
+Provide a comprehensive summary that consolidates all {len(documents)} files into:
+1. **Executive Summary**: High-level overview of the entire project
+2. **Key Achievements**: Major accomplishments across all files
+3. **Decision Timeline**: Chronological view of key decisions
+4. **Stakeholder Analysis**: All participants and their roles
+5. **Action Items**: Consolidated future actions from all files
+6. **Risk & Challenges**: Issues identified across all meetings
+7. **Recommendations**: Strategic recommendations based on all {len(documents)} files
+
+This analysis covers ALL {len(documents)} files in the project.
+"""
+
+            messages = [
+                SystemMessage(content=f"You are a senior project analyst specializing in comprehensive project summaries from {len(documents)} files."),
+                HumanMessage(content=final_summary_prompt)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            # Add processing information
+            final_response = f"**Comprehensive Project Summary** (Processed {len(documents)} files in {len(batch_summaries)} batches)\n\n{response.content}"
+            
+            return (final_response, context) if include_context else final_response
+            
+        except Exception as e:
+            logger.error(f"Error in batch processing: {e}")
+            error_msg = f"Error processing {len(documents)} files with batching: {str(e)}"
+            return (error_msg, "") if include_context else error_msg
+
+    def _process_files_hierarchically(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
+        """Process files hierarchically for projects with 50+ files"""
+        try:
+            logger.info(f"Processing {len(documents)} files hierarchically")
+            
+            # Group documents by date/project phases
+            grouped_docs = self._group_documents_by_timeframe(documents)
+            
+            # Process each group
+            group_summaries = []
+            context_parts = []
+            
+            for group_name, group_docs in grouped_docs.items():
+                logger.info(f"Processing group '{group_name}' with {len(group_docs)} files")
+                group_summary = self._process_document_group(group_docs, group_name)
+                group_summaries.append(f"**{group_name}** ({len(group_docs)} files): {group_summary}")
+                
+                # Add to context
+                context_parts.append(f"Group: {group_name} ({len(group_docs)} files)")
+                context_parts.append(group_summary)
+                context_parts.append("="*60)
+            
+            context = "\n".join(context_parts)
+            
+            # Generate executive summary from group summaries
+            executive_summary_prompt = f"""
+You are a C-level executive analyst. Based on the following group summaries from {len(documents)} files, create an executive-level comprehensive project summary.
+
+Group Summaries:
+{chr(10).join(group_summaries)}
+
+User Query: {query}
+
+Provide an executive summary that synthesizes all {len(documents)} files into:
+1. **Strategic Overview**: High-level project direction and goals
+2. **Key Milestones**: Major achievements and turning points
+3. **Strategic Decisions**: Critical decisions that shaped the project
+4. **Leadership & Teams**: Key stakeholders and their strategic roles
+5. **Future Roadmap**: Strategic action items and next steps
+6. **Risk Assessment**: Strategic risks and mitigation strategies
+7. **Business Impact**: Overall project impact and value delivered
+
+This executive analysis is based on ALL {len(documents)} files across {len(grouped_docs)} project phases.
+"""
+
+            messages = [
+                SystemMessage(content=f"You are a C-level executive analyst providing strategic insights from {len(documents)} files."),
+                HumanMessage(content=executive_summary_prompt)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            # Add processing information
+            final_response = f"**Executive Project Summary** (Processed {len(documents)} files across {len(grouped_docs)} phases)\n\n{response.content}"
+            
+            return (final_response, context) if include_context else final_response
+            
+        except Exception as e:
+            logger.error(f"Error in hierarchical processing: {e}")
+            error_msg = f"Error processing {len(documents)} files hierarchically: {str(e)}"
+            return (error_msg, "") if include_context else error_msg
+
+    def _process_document_batch(self, documents: List[Any], batch_name: str) -> str:
+        """Process a batch of documents and return summary"""
+        try:
+            doc_summaries = []
+            for doc in documents:
+                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
+                if doc_info:
+                    doc_summaries.append(f"- {doc_info['filename']}: {doc_info['content_summary']}")
+            
+            batch_prompt = f"""
+Summarize this batch of {len(documents)} meeting documents:
+
+{chr(10).join(doc_summaries)}
+
+Provide a consolidated summary focusing on:
+- Key themes and topics
+- Major decisions and outcomes
+- Important participants
+- Action items and next steps
+
+Keep it concise but comprehensive.
+"""
+            
+            messages = [
+                SystemMessage(content="You are a meeting summarization expert. Provide concise but comprehensive batch summaries."),
+                HumanMessage(content=batch_prompt)
+            ]
+            
+            response = self.llm.invoke(messages)
+            return response.content
+            
+        except Exception as e:
+            logger.error(f"Error processing batch {batch_name}: {e}")
+            return f"Error processing batch {batch_name}: {str(e)}"
+
+    def _process_document_group(self, documents: List[Any], group_name: str) -> str:
+        """Process a group of documents and return summary"""
+        try:
+            # Use similar logic to batch processing but with group-specific context
+            return self._process_document_batch(documents, group_name)
+            
+        except Exception as e:
+            logger.error(f"Error processing group {group_name}: {e}")
+            return f"Error processing group {group_name}: {str(e)}"
+
+    def _group_documents_by_timeframe(self, documents: List[Any]) -> Dict[str, List[Any]]:
+        """Group documents by timeframe for hierarchical processing"""
+        try:
+            from collections import defaultdict
+            import datetime
+            
+            groups = defaultdict(list)
+            
+            for doc in documents:
+                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
+                if doc_info:
+                    # Parse date and group by month/quarter
+                    try:
+                        doc_date = datetime.datetime.fromisoformat(doc_info['date'].replace('Z', '+00:00'))
+                        month_year = doc_date.strftime('%Y-%m')
+                        groups[f"Period {month_year}"].append(doc)
+                    except:
+                        groups["Undated"].append(doc)
+            
+            return dict(groups)
+            
+        except Exception as e:
+            logger.error(f"Error grouping documents: {e}")
+            return {"All Documents": documents}
 
 def main():
     """Main function for Meeting Document AI System with OpenAI"""

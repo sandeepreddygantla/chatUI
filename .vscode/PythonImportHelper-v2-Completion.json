@@ -924,5 +924,41 @@
         "peekOfCode": "logger = logging.getLogger(__name__)\ndef sanitize_project_name(project_name):\n    \"\"\"Sanitize project name for folder creation\"\"\"\n    if not project_name:\n        return \"Default_Project\"\n    # Replace spaces and special characters\n    sanitized = project_name.replace(\" \", \"_\").replace(\"/\", \"_\").replace(\"\\\\\", \"_\")\n    sanitized = \"\".join(c for c in sanitized if c.isalnum() or c in (\"_\", \"-\"))\n    return sanitized if sanitized else \"Default_Project\"\ndef get_project_name_by_id(cursor, project_id):",
         "detail": "migrate_to_project_folders",
         "documentation": {}
+    },
+    {
+        "label": "test_detect_project_summary_query",
+        "kind": 2,
+        "importPath": "test_comprehensive_summary",
+        "description": "test_comprehensive_summary",
+        "peekOfCode": "def test_detect_project_summary_query():\n    \"\"\"Test the project summary detection logic\"\"\"\n    # Simulate the detection method\n    def detect_project_summary_query(query: str) -> bool:\n        \"\"\"Detect if the query is asking for a comprehensive project summary\"\"\"\n        project_summary_keywords = [\n            'project summary', 'project summaries', 'summarize project', 'summarize the project',\n            'summary of project', 'summary of all files', 'all files summary', 'comprehensive summary',\n            'summarize all meetings', 'all meetings summary', 'overall project', 'entire project',\n            'project overview', 'complete summary', 'full summary', 'all documents summary',",
+        "detail": "test_comprehensive_summary",
+        "documentation": {}
+    },
+    {
+        "label": "test_file_processing_strategy",
+        "kind": 2,
+        "importPath": "test_comprehensive_summary",
+        "description": "test_comprehensive_summary",
+        "peekOfCode": "def test_file_processing_strategy():\n    \"\"\"Test the file count strategy logic\"\"\"\n    def get_processing_strategy(file_count: int) -> str:\n        \"\"\"Determine processing strategy based on file count\"\"\"\n        if file_count <= 15:\n            return \"individual\"\n        elif file_count <= 50:\n            return \"batching\"\n        else:\n            return \"hierarchical\"",
+        "detail": "test_comprehensive_summary",
+        "documentation": {}
+    },
+    {
+        "label": "test_comprehensive_summary_features",
+        "kind": 2,
+        "importPath": "test_comprehensive_summary",
+        "description": "test_comprehensive_summary",
+        "peekOfCode": "def test_comprehensive_summary_features():\n    \"\"\"Test the comprehensive summary features\"\"\"\n    print(\"\\nTesting Comprehensive Summary Features:\")\n    print(\"=\" * 50)\n    # Test the key features that were implemented\n    features = [\n        \"✅ Project summary detection with 16 keyword patterns\",\n        \"✅ Tier 1 processing: Individual files (≤15 files)\",\n        \"✅ Tier 2 processing: Batch processing (16-50 files)\",\n        \"✅ Tier 3 processing: Hierarchical processing (50+ files)\",",
+        "detail": "test_comprehensive_summary",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "test_comprehensive_summary",
+        "description": "test_comprehensive_summary",
+        "peekOfCode": "def main():\n    \"\"\"Run all tests\"\"\"\n    print(\"🚀 Testing Comprehensive Project Summary Implementation\")\n    print(\"=\" * 70)\n    test1 = test_detect_project_summary_query()\n    test2 = test_file_processing_strategy()\n    test3 = test_comprehensive_summary_features()\n    print(\"\\n\" + \"=\" * 70)\n    if test1 and test2 and test3:\n        print(\"🎉 ALL TESTS PASSED! Implementation is ready for use.\")",
+        "detail": "test_comprehensive_summary",
+        "documentation": {}
     }
 ]
