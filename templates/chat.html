@@ -52,9 +52,13 @@
             </div>
 
             <div class="sidebar-footer">
-                <div class="user-profile" onclick="showSettings()">
-                    <div class="user-avatar">U</div>
-                    <div class="user-name">UHG User</div>
+                <div class="user-profile" onclick="showUserProfile()">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div class="user-details">
+                        <div class="user-name" id="sidebar-user-name">UHG User</div>
+                        <div class="user-email" id="sidebar-user-email">user@uhg.com</div>
+                    </div>
+                    <div class="profile-dropdown-icon">⚙️</div>
                 </div>
             </div>
         </div>
@@ -68,6 +72,7 @@
                     <button class="icon-btn" title="Statistics" onclick="showStats()">📊</button>
                     <button class="icon-btn" title="Help" onclick="showHelp()">❓</button>
                     <button class="icon-btn" title="Refresh" onclick="refreshSystem()">🔄</button>
+                    <button class="icon-btn" title="Logout" onclick="logout()" id="logout-btn" style="display: none;">🚪</button>
                 </div>
             </div>
 
@@ -157,6 +162,15 @@
                 <button class="close-btn" onclick="hideUploadModal()">×</button>
             </div>
             
+            <!-- Project Selection -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="project-select" class="form-label">Select Project:</label>
+                <select id="project-select" class="form-select">
+                    <option value="">Loading projects...</option>
+                </select>
+                <button class="btn btn-link" onclick="showCreateProjectModal()" style="margin-left: 10px; padding: 0; font-size: 14px;">+ Create New Project</button>
+            </div>
+            
             <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
                 <div class="upload-icon">📁</div>
                 <div class="upload-text">Drop files here or click to upload</div>
@@ -170,7 +184,6 @@
             <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
                 <button class="btn btn-secondary" onclick="hideUploadModal()">Cancel</button>
                 <button class="btn btn-primary" id="process-btn" onclick="processFiles()" disabled>
-                    <span>🚀</span>
                     Process Files
                 </button>
             </div>
@@ -220,6 +233,95 @@
             <div class="modal-actions">
                 <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
                 <button class="modal-btn modal-btn-save" onclick="confirmEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div class="custom-modal" id="create-project-modal">
+        <div class="custom-modal-content">
+            <div class="modal-header">
+                <span class="modal-icon">📁</span>
+                <span class="modal-title">Create New Project</span>
+            </div>
+            <div class="modal-message">
+                Enter project details:
+            </div>
+            <input type="text" class="modal-input" id="project-name-input" placeholder="Project name" maxlength="50">
+            <textarea class="modal-input" id="project-description-input" placeholder="Project description (optional)" rows="3"></textarea>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeCreateProjectModal()">Cancel</button>
+                <button class="modal-btn modal-btn-save" onclick="confirmCreateProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div class="custom-modal" id="user-profile-modal">
+        <div class="custom-modal-content user-profile-content">
+            <div class="modal-header">
+                <span class="modal-icon">👤</span>
+                <span class="modal-title">User Profile</span>
+                <button class="close-btn" onclick="closeUserProfile()">×</button>
+            </div>
+            
+            <div class="profile-section">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar" id="profile-avatar">U</div>
+                    <div class="avatar-initials" id="avatar-initials">UU</div>
+                </div>
+                
+                <div class="profile-details">
+                    <div class="profile-detail-group">
+                        <label class="profile-label">Full Name</label>
+                        <div class="profile-value" id="profile-full-name">UHG User</div>
+                    </div>
+                    
+                    <div class="profile-detail-group">
+                        <label class="profile-label">Username</label>
+                        <div class="profile-value" id="profile-username">uhg_user</div>
+                    </div>
+                    
+                    <div class="profile-detail-group">
+                        <label class="profile-label">Email Address</label>
+                        <div class="profile-value" id="profile-email">user@uhg.com</div>
+                    </div>
+                    
+                    <div class="profile-detail-group">
+                        <label class="profile-label">User ID</label>
+                        <div class="profile-value" id="profile-user-id">USER001</div>
+                    </div>
+                    
+                    <div class="profile-detail-group">
+                        <label class="profile-label">Last Login</label>
+                        <div class="profile-value" id="profile-last-login">Today, 10:30 AM</div>
+                    </div>
+                    
+                    <div class="profile-detail-group">
+                        <label class="profile-label">Account Created</label>
+                        <div class="profile-value" id="profile-created-at">January 15, 2025</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-documents">0</div>
+                    <div class="stat-label">Documents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-conversations">0</div>
+                    <div class="stat-label">Conversations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-projects">0</div>
+                    <div class="stat-label">Projects</div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="showAccountSettings()">Account Settings</button>
+                <button class="modal-btn modal-btn-danger" onclick="logout()">Logout</button>
             </div>
         </div>
     </div>

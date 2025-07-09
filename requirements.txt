@@ -1,5 +1,11 @@
 # Core Flask Web Framework
 Flask
+flask-login
+flask-session
+
+# Authentication
+bcrypt
+
 # OpenAI Integration
 openai
 langchain

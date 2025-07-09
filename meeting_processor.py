@@ -100,6 +100,39 @@ class DocumentChunk:
     embedding: Optional[np.ndarray] = None
 
 @dataclass
+class User:
+    """Structure to hold user information"""
+    user_id: str
+    username: str
+    email: str
+    full_name: str
+    password_hash: str
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    is_active: bool = True
+    role: str = 'user'
+
+@dataclass
+class Project:
+    """Structure to hold project information"""
+    project_id: str
+    user_id: str
+    project_name: str
+    description: str
+    created_at: datetime
+    is_active: bool = True
+
+@dataclass
+class Meeting:
+    """Structure to hold meeting information"""
+    meeting_id: str
+    user_id: str
+    project_id: str
+    meeting_name: str
+    meeting_date: datetime
+    created_at: datetime
+
+@dataclass
 class MeetingDocument:
     """Structure to hold meeting document information"""
     document_id: str
@@ -114,6 +147,10 @@ class MeetingDocument:
     participants: List[str]
     chunk_count: int = 0
     file_size: int = 0
+    user_id: Optional[str] = None
+    meeting_id: Optional[str] = None
+    project_id: Optional[str] = None
+    folder_path: Optional[str] = None
 
 class VectorDatabase:
     """Vector database using FAISS for similarity search and SQLite for metadata"""
@@ -133,7 +170,64 @@ class VectorDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Create documents table
+        # Create users table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id TEXT PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                full_name TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                role TEXT DEFAULT 'user'
+            )
+        ''')
+        
+        # Check if we need to migrate existing tables
+        self._migrate_existing_tables(cursor)
+        
+        # Create projects table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS projects (
+                project_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                project_name TEXT NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+        ''')
+        
+        # Create meetings table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS meetings (
+                meeting_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                meeting_name TEXT NOT NULL,
+                meeting_date DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (user_id),
+                FOREIGN KEY (project_id) REFERENCES projects (project_id)
+            )
+        ''')
+        
+        # Create user sessions table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                session_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+        ''')
+        
+        # Create documents table (updated with user context)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS documents (
                 document_id TEXT PRIMARY KEY,
@@ -147,11 +241,18 @@ class VectorDatabase:
                 participants TEXT,
                 chunk_count INTEGER,
                 file_size INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                user_id TEXT,
+                meeting_id TEXT,
+                project_id TEXT,
+                folder_path TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (user_id),
+                FOREIGN KEY (meeting_id) REFERENCES meetings (meeting_id),
+                FOREIGN KEY (project_id) REFERENCES projects (project_id)
             )
         ''')
         
-        # Create chunks table
+        # Create chunks table (updated with user context)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS chunks (
                 chunk_id TEXT PRIMARY KEY,
@@ -161,18 +262,70 @@ class VectorDatabase:
                 content TEXT NOT NULL,
                 start_char INTEGER,
                 end_char INTEGER,
+                user_id TEXT,
+                meeting_id TEXT,
+                project_id TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (document_id) REFERENCES documents (document_id)
+                FOREIGN KEY (document_id) REFERENCES documents (document_id),
+                FOREIGN KEY (user_id) REFERENCES users (user_id),
+                FOREIGN KEY (meeting_id) REFERENCES meetings (meeting_id),
+                FOREIGN KEY (project_id) REFERENCES projects (project_id)
             )
         ''')
         
         # Create indexes for faster searches
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_document_date ON documents(date)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_document_filename ON documents(filename)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_document_user ON documents(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_document_project ON documents(project_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_document_meeting ON documents(meeting_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_chunk_document ON chunks(document_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_chunk_user ON chunks(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_meetings_user ON meetings(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_meetings_project ON meetings(project_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user ON user_sessions(user_id)')
         
         conn.commit()
         conn.close()
+    
+    def _migrate_existing_tables(self, cursor):
+        """Migrate existing tables to support multi-user structure"""
+        try:
+            # Check if documents table exists and needs migration
+            cursor.execute("PRAGMA table_info(documents)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if 'user_id' not in columns:
+                logger.info("Migrating documents table to support multi-user...")
+                cursor.execute('ALTER TABLE documents ADD COLUMN user_id TEXT')
+                cursor.execute('ALTER TABLE documents ADD COLUMN meeting_id TEXT')
+                cursor.execute('ALTER TABLE documents ADD COLUMN project_id TEXT')
+                logger.info("Documents table migrated successfully")
+            
+            # Check if documents table needs folder_path column
+            if 'folder_path' not in columns:
+                logger.info("Adding folder_path column to documents table...")
+                cursor.execute('ALTER TABLE documents ADD COLUMN folder_path TEXT')
+                logger.info("folder_path column added successfully")
+            
+            # Check if chunks table exists and needs migration
+            cursor.execute("PRAGMA table_info(chunks)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if 'user_id' not in columns:
+                logger.info("Migrating chunks table to support multi-user...")
+                cursor.execute('ALTER TABLE chunks ADD COLUMN user_id TEXT')
+                cursor.execute('ALTER TABLE chunks ADD COLUMN meeting_id TEXT')
+                cursor.execute('ALTER TABLE chunks ADD COLUMN project_id TEXT')
+                logger.info("Chunks table migrated successfully")
+                
+        except sqlite3.OperationalError as e:
+            # Tables might not exist yet, that's okay
+            logger.info(f"Migration check: {e}")
+            pass
     
     def _load_or_create_index(self):
         """Load existing FAISS index or create new one"""
@@ -197,8 +350,9 @@ class VectorDatabase:
             cursor.execute('''
                 INSERT OR REPLACE INTO documents 
                 (document_id, filename, date, title, content_summary, main_topics, 
-                 past_events, future_actions, participants, chunk_count, file_size)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 past_events, future_actions, participants, chunk_count, file_size,
+                 user_id, meeting_id, project_id, folder_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 document.document_id,
                 document.filename,
@@ -210,7 +364,11 @@ class VectorDatabase:
                 json.dumps(document.future_actions),
                 json.dumps(document.participants),
                 document.chunk_count,
-                document.file_size
+                document.file_size,
+                document.user_id,
+                document.meeting_id,
+                document.project_id,
+                getattr(document, 'folder_path', None)
             ))
             
             # Prepare vectors and chunk data for batch insertion
@@ -230,12 +388,28 @@ class VectorDatabase:
                         chunk.end_char
                     ))
             
-            # Insert chunks in batch
+            # Insert chunks in batch with user context
+            chunk_data_with_context = []
+            for chunk in chunks:
+                chunk_data_with_context.append((
+                    chunk.chunk_id,
+                    chunk.document_id,
+                    chunk.filename,
+                    chunk.chunk_index,
+                    chunk.content,
+                    chunk.start_char,
+                    chunk.end_char,
+                    document.user_id,
+                    document.meeting_id,
+                    document.project_id
+                ))
+            
             cursor.executemany('''
                 INSERT OR REPLACE INTO chunks 
-                (chunk_id, document_id, filename, chunk_index, content, start_char, end_char)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', chunk_data)
+                (chunk_id, document_id, filename, chunk_index, content, start_char, end_char,
+                 user_id, meeting_id, project_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', chunk_data_with_context)
             
             # Add vectors to FAISS index
             if vectors:
@@ -312,33 +486,52 @@ class VectorDatabase:
         conn.close()
         return chunks
     
-    def get_documents_by_timeframe(self, timeframe: str) -> List[MeetingDocument]:
-        """Get documents filtered by timeframe"""
-        now = datetime.now()
-        timeframe_map = {
-            'last_week': timedelta(weeks=1),
-            'last_month': timedelta(days=30),
-            'last_3_months': timedelta(days=90),
-            'last_quarter': timedelta(days=90),
-            'last_6_months': timedelta(days=180),
-            'last_year': timedelta(days=365),
-            'recent': timedelta(days=30)
-        }
+    def get_documents_by_timeframe(self, timeframe: str, user_id: str = None) -> List[MeetingDocument]:
+        """Get documents filtered by intelligent timeframe calculation"""
+        logger.info(f"Getting documents by timeframe: {timeframe}")
         
-        if timeframe not in timeframe_map:
+        # Calculate date range using intelligent calendar logic
+        start_date, end_date = self._calculate_date_range(timeframe)
+        
+        if not start_date and not end_date:
+            logger.warning(f"Unknown timeframe: {timeframe}, returning all documents")
             return list(self.document_metadata.values())
         
-        cutoff = now - timeframe_map[timeframe]
+        logger.info(f"Date range calculated: {start_date} to {end_date}")
         
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cursor.execute('''
+        # Build query with user filtering if provided
+        base_query = '''
             SELECT document_id, filename, date, title, content_summary, main_topics,
-                   past_events, future_actions, participants, chunk_count, file_size
-            FROM documents WHERE date >= ?
-            ORDER BY date DESC
-        ''', (cutoff,))
+                   past_events, future_actions, participants, chunk_count, file_size,
+                   user_id, project_id, folder_path
+            FROM documents 
+            WHERE 1=1
+        '''
+        
+        params = []
+        
+        # Add user filtering
+        if user_id:
+            base_query += ' AND user_id = ?'
+            params.append(user_id)
+        
+        # Add date filtering
+        if start_date and end_date:
+            base_query += ' AND date BETWEEN ? AND ?'
+            params.extend([start_date.isoformat(), end_date.isoformat()])
+        elif start_date:
+            base_query += ' AND date >= ?'
+            params.append(start_date.isoformat())
+        elif end_date:
+            base_query += ' AND date <= ?'
+            params.append(end_date.isoformat())
+        
+        base_query += ' ORDER BY date DESC'
+        
+        cursor.execute(base_query, params)
         
         documents = []
         for row in cursor.fetchall():
@@ -359,7 +552,267 @@ class VectorDatabase:
             documents.append(doc)
         
         conn.close()
+        logger.info(f"Found {len(documents)} documents in timeframe {timeframe}")
         return documents
+    
+    def _calculate_date_range(self, timeframe: str) -> Tuple[Optional[datetime], Optional[datetime]]:
+        """Calculate start and end dates for intelligent timeframe filtering"""
+        import calendar
+        
+        now = datetime.now()
+        today = now.date()
+        
+        # Get current week boundaries (Monday to Sunday)
+        current_week_start = today - timedelta(days=today.weekday())
+        current_week_end = current_week_start + timedelta(days=6)
+        
+        # Get last week boundaries
+        last_week_start = current_week_start - timedelta(days=7)
+        last_week_end = current_week_start - timedelta(days=1)
+        
+        # Get current month boundaries
+        current_month_start = today.replace(day=1)
+        _, last_day = calendar.monthrange(today.year, today.month)
+        current_month_end = today.replace(day=last_day)
+        
+        # Get last month boundaries
+        if today.month == 1:
+            last_month_year = today.year - 1
+            last_month = 12
+        else:
+            last_month_year = today.year
+            last_month = today.month - 1
+        
+        last_month_start = today.replace(year=last_month_year, month=last_month, day=1)
+        _, last_month_last_day = calendar.monthrange(last_month_year, last_month)
+        last_month_end = today.replace(year=last_month_year, month=last_month, day=last_month_last_day)
+        
+        # Get quarter boundaries
+        current_quarter = ((today.month - 1) // 3) + 1
+        current_quarter_start = today.replace(month=(current_quarter - 1) * 3 + 1, day=1)
+        quarter_end_month = current_quarter * 3
+        _, quarter_last_day = calendar.monthrange(today.year, quarter_end_month)
+        current_quarter_end = today.replace(month=quarter_end_month, day=quarter_last_day)
+        
+        # Map timeframes to date ranges
+        timeframe_map = {
+            # Current periods
+            'current_week': (datetime.combine(current_week_start, datetime.min.time()), 
+                           datetime.combine(current_week_end, datetime.max.time())),
+            'this_week': (datetime.combine(current_week_start, datetime.min.time()), 
+                         datetime.combine(current_week_end, datetime.max.time())),
+            'current_month': (datetime.combine(current_month_start, datetime.min.time()), 
+                            datetime.combine(current_month_end, datetime.max.time())),
+            'this_month': (datetime.combine(current_month_start, datetime.min.time()), 
+                         datetime.combine(current_month_end, datetime.max.time())),
+            
+            # Last periods
+            'last_week': (datetime.combine(last_week_start, datetime.min.time()), 
+                         datetime.combine(last_week_end, datetime.max.time())),
+            'past_week': (datetime.combine(last_week_start, datetime.min.time()), 
+                         datetime.combine(last_week_end, datetime.max.time())),
+            'last_month': (datetime.combine(last_month_start, datetime.min.time()), 
+                          datetime.combine(last_month_end, datetime.max.time())),
+            'past_month': (datetime.combine(last_month_start, datetime.min.time()), 
+                          datetime.combine(last_month_end, datetime.max.time())),
+            
+            # Relative periods (from start date to now)
+            'last_7_days': (now - timedelta(days=7), now),
+            'past_7_days': (now - timedelta(days=7), now),
+            'last_14_days': (now - timedelta(days=14), now),
+            'last_30_days': (now - timedelta(days=30), now),
+            'last_60_days': (now - timedelta(days=60), now),
+            'last_90_days': (now - timedelta(days=90), now),
+            
+            # Recent periods
+            'recent': (now - timedelta(days=30), now),
+            'recently': (now - timedelta(days=30), now),
+            
+            # Quarter periods
+            'current_quarter': (datetime.combine(current_quarter_start, datetime.min.time()), 
+                              datetime.combine(current_quarter_end, datetime.max.time())),
+            'this_quarter': (datetime.combine(current_quarter_start, datetime.min.time()), 
+                           datetime.combine(current_quarter_end, datetime.max.time())),
+            'last_quarter': (None, None),  # Will be calculated below
+            
+            # Year periods
+            'current_year': (datetime(today.year, 1, 1), datetime(today.year, 12, 31, 23, 59, 59)),
+            'this_year': (datetime(today.year, 1, 1), datetime(today.year, 12, 31, 23, 59, 59)),
+            'last_year': (datetime(today.year - 1, 1, 1), datetime(today.year - 1, 12, 31, 23, 59, 59)),
+            
+            # Extended periods
+            'last_3_months': (now - timedelta(days=90), now),
+            'last_6_months': (now - timedelta(days=180), now),
+            'last_12_months': (now - timedelta(days=365), now),
+        }
+        
+        # Handle last quarter calculation
+        if timeframe.lower() in ['last_quarter', 'past_quarter']:
+            if current_quarter == 1:
+                last_quarter = 4
+                last_quarter_year = today.year - 1
+            else:
+                last_quarter = current_quarter - 1
+                last_quarter_year = today.year
+            
+            last_quarter_start = datetime(last_quarter_year, (last_quarter - 1) * 3 + 1, 1)
+            quarter_end_month = last_quarter * 3
+            _, quarter_last_day = calendar.monthrange(last_quarter_year, quarter_end_month)
+            last_quarter_end = datetime(last_quarter_year, quarter_end_month, quarter_last_day, 23, 59, 59)
+            timeframe_map['last_quarter'] = (last_quarter_start, last_quarter_end)
+            timeframe_map['past_quarter'] = (last_quarter_start, last_quarter_end)
+        
+        # Get the timeframe, case-insensitive
+        timeframe_key = timeframe.lower().replace(' ', '_')
+        if timeframe_key in timeframe_map:
+            return timeframe_map[timeframe_key]
+        
+        # If no exact match, try partial matches
+        for key in timeframe_map:
+            if timeframe_key in key or key in timeframe_key:
+                logger.info(f"Partial match found: {timeframe_key} -> {key}")
+                return timeframe_map[key]
+        
+        logger.warning(f"No date range found for timeframe: {timeframe}")
+        return None, None
+    
+    def _detect_timeframe_from_query(self, query: str) -> Optional[str]:
+        """Enhanced timeframe detection from natural language query"""
+        query_lower = query.lower()
+        
+        # Comprehensive timeframe patterns with priority
+        timeframe_patterns = [
+            # Current periods (highest priority)
+            (['current week', 'this week'], 'current_week'),
+            (['current month', 'this month'], 'current_month'),
+            (['current quarter', 'this quarter'], 'current_quarter'),
+            (['current year', 'this year'], 'current_year'),
+            
+            # Last periods (high priority)
+            (['last week', 'past week', 'previous week'], 'last_week'),
+            (['last month', 'past month', 'previous month'], 'last_month'),
+            (['last quarter', 'past quarter', 'previous quarter'], 'last_quarter'),
+            (['last year', 'past year', 'previous year'], 'last_year'),
+            
+            # Specific day counts (medium priority)
+            (['last 7 days', 'past 7 days', 'last seven days'], 'last_7_days'),
+            (['last 14 days', 'past 14 days', 'last two weeks'], 'last_14_days'),
+            (['last 30 days', 'past 30 days', 'last thirty days'], 'last_30_days'),
+            (['last 60 days', 'past 60 days', 'last sixty days'], 'last_60_days'),
+            (['last 90 days', 'past 90 days', 'last ninety days'], 'last_90_days'),
+            
+            # Extended periods (lower priority)
+            (['last 3 months', 'past 3 months', 'last three months'], 'last_3_months'),
+            (['last 6 months', 'past 6 months', 'last six months'], 'last_6_months'),
+            (['last 12 months', 'past 12 months', 'last twelve months'], 'last_12_months'),
+            
+            # Recent periods (lowest priority)
+            (['recent', 'recently', 'lately'], 'recent'),
+        ]
+        
+        # Find the best match (earliest occurrence has highest priority)
+        for patterns, timeframe in timeframe_patterns:
+            for pattern in patterns:
+                if pattern in query_lower:
+                    logger.info(f"Detected timeframe pattern '{pattern}' -> {timeframe}")
+                    return timeframe
+        
+        return None
+    
+    def _generate_date_based_summary(self, query: str, documents: List[Any], timeframe: str, include_context: bool = False) -> Union[str, Tuple[str, str]]:
+        """Generate intelligent date-based summary with chronological organization"""
+        logger.info(f"Generating date-based summary for {len(documents)} documents in {timeframe} timeframe")
+        
+        # Sort documents by date
+        sorted_docs = sorted(documents, key=lambda x: x.date)
+        
+        # Group documents by date for better organization
+        from collections import defaultdict
+        date_groups = defaultdict(list)
+        for doc in sorted_docs:
+            date_key = doc.date.strftime('%Y-%m-%d')
+            date_groups[date_key].append(doc)
+        
+        # Build comprehensive context from all documents
+        context_parts = []
+        document_summaries = []
+        
+        for date_key, docs in sorted(date_groups.items()):
+            date_formatted = datetime.strptime(date_key, '%Y-%m-%d').strftime('%B %d, %Y')
+            context_parts.append(f"\n=== {date_formatted} ===")
+            
+            for doc in docs:
+                # Add document summary
+                doc_summary = f"Document: {doc.filename}\n"
+                if doc.content_summary:
+                    doc_summary += f"Summary: {doc.content_summary}\n"
+                if doc.main_topics:
+                    doc_summary += f"Main Topics: {', '.join(doc.main_topics)}\n"
+                if doc.participants:
+                    doc_summary += f"Participants: {', '.join(doc.participants)}\n"
+                if doc.future_actions:
+                    doc_summary += f"Action Items: {', '.join(doc.future_actions)}\n"
+                
+                context_parts.append(doc_summary)
+                document_summaries.append(doc_summary)
+        
+        # Create comprehensive context
+        full_context = '\n'.join(context_parts)
+        
+        # Generate summary prompt based on query type
+        timeframe_display = timeframe.replace('_', ' ').title()
+        summary_prompt = f"""
+        Based on the meeting documents from {timeframe_display}, please provide a comprehensive summary that addresses the user's request: "{query}"
+
+        Please organize your response to include:
+        1. **Overview**: High-level summary of activities during this period
+        2. **Key Decisions**: Important decisions made during meetings
+        3. **Action Items**: Tasks and follow-ups identified
+        4. **Participants**: Key people involved across meetings
+        5. **Timeline**: Chronological progression of events
+        6. **Outstanding Issues**: Any unresolved matters
+
+        Meeting Documents Context:
+        {full_context}
+
+        Provide a well-structured response that gives the user a clear understanding of what happened during {timeframe_display}.
+        """
+        
+        try:
+            # Get LLM response
+            llm = get_llm()
+            messages = [
+                SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
+                HumanMessage(content=summary_prompt)
+            ]
+            
+            response = llm.invoke(messages)
+            summary_response = response.content.strip()
+            
+            # Add timeframe context to the response
+            final_response = f"**Summary for {timeframe_display}** ({len(documents)} documents)\n\n{summary_response}"
+            
+            if include_context:
+                return final_response, full_context
+            else:
+                return final_response
+                
+        except Exception as e:
+            logger.error(f"Error generating date-based summary: {e}")
+            # Fallback to basic summary
+            fallback_summary = f"""**Summary for {timeframe_display}** ({len(documents)} documents)
+
+            During this period, there were {len(documents)} meetings/documents:
+            
+            {chr(10).join([f"• {doc.filename} ({doc.date.strftime('%B %d, %Y')})" for doc in sorted_docs])}
+            
+            For detailed information about specific meetings, please ask about individual documents or topics.
+            """
+            
+            if include_context:
+                return fallback_summary, full_context
+            else:
+                return fallback_summary
     
     def keyword_search_chunks(self, keywords: List[str], limit: int = 50) -> List[str]:
         """Perform keyword search on chunk content"""
@@ -386,16 +839,26 @@ class VectorDatabase:
         conn.close()
         return chunk_ids
     
-    def get_all_documents(self) -> List[Dict[str, Any]]:
+    def get_all_documents(self, user_id: str = None) -> List[Dict[str, Any]]:
         """Get all documents with metadata for document selection"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cursor.execute('''
-            SELECT document_id, filename, date, title, content_summary, file_size, chunk_count
-            FROM documents
-            ORDER BY date DESC
-        ''')
+        if user_id:
+            cursor.execute('''
+                SELECT document_id, filename, date, title, content_summary, file_size, chunk_count,
+                       user_id, meeting_id, project_id
+                FROM documents
+                WHERE user_id = ?
+                ORDER BY date DESC
+            ''', (user_id,))
+        else:
+            cursor.execute('''
+                SELECT document_id, filename, date, title, content_summary, file_size, chunk_count,
+                       user_id, meeting_id, project_id
+                FROM documents
+                ORDER BY date DESC
+            ''')
         
         documents = []
         for row in cursor.fetchall():
@@ -406,12 +869,306 @@ class VectorDatabase:
                 'title': row[3],
                 'content_summary': row[4],
                 'file_size': row[5],
-                'chunk_count': row[6]
+                'chunk_count': row[6],
+                'user_id': row[7],
+                'meeting_id': row[8],
+                'project_id': row[9]
             }
             documents.append(doc)
         
         conn.close()
         return documents
+    
+    def get_user_documents_by_scope(self, user_id: str, project_id: str = None, meeting_id: str = None) -> List[str]:
+        """Get document IDs for a user filtered by project or meeting"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        if meeting_id:
+            cursor.execute('''
+                SELECT document_id FROM documents 
+                WHERE user_id = ? AND meeting_id = ?
+            ''', (user_id, meeting_id))
+        elif project_id:
+            cursor.execute('''
+                SELECT document_id FROM documents 
+                WHERE user_id = ? AND project_id = ?
+            ''', (user_id, project_id))
+        else:
+            cursor.execute('''
+                SELECT document_id FROM documents 
+                WHERE user_id = ?
+            ''', (user_id,))
+        
+        document_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return document_ids
+    
+    def get_user_documents_by_folder(self, user_id: str, folder_path: str, project_id: str = None, meeting_id: str = None) -> List[str]:
+        """Get document IDs for a user filtered by folder path"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        conditions = ["user_id = ?", "folder_path = ?"]
+        params = [user_id, folder_path]
+        
+        if meeting_id:
+            conditions.append("meeting_id = ?")
+            params.append(meeting_id)
+        elif project_id:
+            conditions.append("project_id = ?")
+            params.append(project_id)
+        
+        cursor.execute(f'''
+            SELECT document_id FROM documents 
+            WHERE {' AND '.join(conditions)}
+        ''', params)
+        
+        document_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return document_ids
+    
+    def keyword_search_chunks_by_user(self, keywords: List[str], user_id: str, project_id: str = None, meeting_id: str = None, limit: int = 50) -> List[str]:
+        """Perform keyword search on chunk content filtered by user/project/meeting"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Build search conditions
+        search_conditions = []
+        params = []
+        
+        # Add keyword conditions
+        for keyword in keywords:
+            search_conditions.append("content LIKE ?")
+            params.append(f"%{keyword}%")
+        
+        # Add user filter
+        user_condition = "user_id = ?"
+        params.append(user_id)
+        
+        # Add optional project/meeting filters
+        additional_conditions = [user_condition]
+        if project_id:
+            additional_conditions.append("project_id = ?")
+            params.append(project_id)
+        if meeting_id:
+            additional_conditions.append("meeting_id = ?")
+            params.append(meeting_id)
+        
+        where_clause = f"({' OR '.join(search_conditions)}) AND {' AND '.join(additional_conditions)}"
+        
+        query = f'''
+            SELECT chunk_id FROM chunks 
+            WHERE {where_clause}
+            LIMIT ?
+        '''
+        params.append(limit)
+        
+        cursor.execute(query, params)
+        chunk_ids = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        return chunk_ids
+    
+    # User Management Methods
+    def create_user(self, username: str, email: str, full_name: str, password_hash: str) -> str:
+        """Create a new user"""
+        user_id = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{username}"
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO users (user_id, username, email, full_name, password_hash)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user_id, username, email, full_name, password_hash))
+            
+            conn.commit()
+            logger.info(f"Created user: {username} ({user_id})")
+            return user_id
+            
+        except sqlite3.IntegrityError as e:
+            logger.error(f"Error creating user {username}: {e}")
+            conn.rollback()
+            raise ValueError(f"Username or email already exists")
+        finally:
+            conn.close()
+    
+    def get_user_by_username(self, username: str) -> Optional[User]:
+        """Get user by username"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT user_id, username, email, full_name, password_hash, created_at, last_login, is_active, role
+            FROM users WHERE username = ? AND is_active = TRUE
+        ''', (username,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return User(
+                user_id=row[0],
+                username=row[1],
+                email=row[2],
+                full_name=row[3],
+                password_hash=row[4],
+                created_at=datetime.fromisoformat(row[5]),
+                last_login=datetime.fromisoformat(row[6]) if row[6] else None,
+                is_active=bool(row[7]),
+                role=row[8]
+            )
+        return None
+    
+    def get_user_by_id(self, user_id: str) -> Optional[User]:
+        """Get user by user_id"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT user_id, username, email, full_name, password_hash, created_at, last_login, is_active, role
+            FROM users WHERE user_id = ? AND is_active = TRUE
+        ''', (user_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return User(
+                user_id=row[0],
+                username=row[1],
+                email=row[2],
+                full_name=row[3],
+                password_hash=row[4],
+                created_at=datetime.fromisoformat(row[5]),
+                last_login=datetime.fromisoformat(row[6]) if row[6] else None,
+                is_active=bool(row[7]),
+                role=row[8]
+            )
+        return None
+    
+    def update_user_last_login(self, user_id: str):
+        """Update user's last login timestamp"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?
+        ''', (user_id,))
+        
+        conn.commit()
+        conn.close()
+    
+    # Project Management Methods
+    def create_project(self, user_id: str, project_name: str, description: str = "") -> str:
+        """Create a new project for a user"""
+        project_id = f"proj_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id.split('_')[-1]}"
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO projects (project_id, user_id, project_name, description)
+                VALUES (?, ?, ?, ?)
+            ''', (project_id, user_id, project_name, description))
+            
+            conn.commit()
+            logger.info(f"Created project: {project_name} for user {user_id}")
+            return project_id
+            
+        except Exception as e:
+            logger.error(f"Error creating project {project_name}: {e}")
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    
+    def get_user_projects(self, user_id: str) -> List[Project]:
+        """Get all projects for a user"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT project_id, user_id, project_name, description, created_at, is_active
+            FROM projects WHERE user_id = ? AND is_active = TRUE
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        
+        projects = []
+        for row in cursor.fetchall():
+            project = Project(
+                project_id=row[0],
+                user_id=row[1],
+                project_name=row[2],
+                description=row[3],
+                created_at=datetime.fromisoformat(row[4]),
+                is_active=bool(row[5])
+            )
+            projects.append(project)
+        
+        conn.close()
+        return projects
+    
+    # Meeting Management Methods
+    def create_meeting(self, user_id: str, project_id: str, meeting_name: str, meeting_date: datetime) -> str:
+        """Create a new meeting"""
+        meeting_id = f"meet_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id.split('_')[-1]}"
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO meetings (meeting_id, user_id, project_id, meeting_name, meeting_date)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (meeting_id, user_id, project_id, meeting_name, meeting_date.date()))
+            
+            conn.commit()
+            logger.info(f"Created meeting: {meeting_name} for project {project_id}")
+            return meeting_id
+            
+        except Exception as e:
+            logger.error(f"Error creating meeting {meeting_name}: {e}")
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    
+    def get_user_meetings(self, user_id: str, project_id: str = None) -> List[Meeting]:
+        """Get meetings for a user, optionally filtered by project"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        if project_id:
+            cursor.execute('''
+                SELECT meeting_id, user_id, project_id, meeting_name, meeting_date, created_at
+                FROM meetings WHERE user_id = ? AND project_id = ?
+                ORDER BY meeting_date DESC, created_at DESC
+            ''', (user_id, project_id))
+        else:
+            cursor.execute('''
+                SELECT meeting_id, user_id, project_id, meeting_name, meeting_date, created_at
+                FROM meetings WHERE user_id = ?
+                ORDER BY meeting_date DESC, created_at DESC
+            ''', (user_id,))
+        
+        meetings = []
+        for row in cursor.fetchall():
+            meeting = Meeting(
+                meeting_id=row[0],
+                user_id=row[1],
+                project_id=row[2],
+                meeting_name=row[3],
+                meeting_date=datetime.fromisoformat(row[4]),
+                created_at=datetime.fromisoformat(row[5])
+            )
+            meetings.append(meeting)
+        
+        conn.close()
+        return meetings
     
     def save_index(self):
         """Save FAISS index to disk"""
@@ -735,7 +1492,7 @@ class EnhancedMeetingDocumentProcessor:
             self.vector_db.save_index()
             logger.info(f"Successfully processed {processed_count} documents")
     
-    def hybrid_search(self, query: str, top_k: int = 15, semantic_weight: float = 0.7) -> List[DocumentChunk]:
+    def hybrid_search(self, query: str, user_id: str, project_id: str = None, meeting_id: str = None, top_k: int = 15, semantic_weight: float = 0.7) -> List[DocumentChunk]:
         """Perform hybrid search combining semantic and keyword search"""
         
         # Extract keywords from query
@@ -749,8 +1506,8 @@ class EnhancedMeetingDocumentProcessor:
             logger.error(f"Error in semantic search: {e}")
             semantic_results = []
         
-        # Keyword search
-        keyword_chunk_ids = self.vector_db.keyword_search_chunks(keywords, top_k)
+        # Keyword search with user context
+        keyword_chunk_ids = self.vector_db.keyword_search_chunks_by_user(keywords, user_id, project_id, meeting_id, top_k)
         
         # Combine and score results
         chunk_scores = defaultdict(float)
@@ -770,34 +1527,81 @@ class EnhancedMeetingDocumentProcessor:
         # Retrieve chunk details
         return self.vector_db.get_chunks_by_ids(top_chunk_ids)
     
-    def answer_query(self, query: str, document_ids: List[str] = None, context_limit: int = 10, include_context: bool = False) -> Union[str, Tuple[str, str]]:
+    def detect_summary_query(self, query: str) -> bool:
+        """Detect if the query is asking for meeting summaries"""
+        summary_keywords = [
+            'summarize', 'summary', 'summaries', 'overview', 'brief', 
+            'recap', 'highlights', 'key points', 'main points',
+            'all meetings', 'all documents', 'overall', 'across all',
+            'consolidate', 'aggregate', 'compile', 'comprehensive',
+            'meetings summary', 'meeting summaries', 'summarize meetings',
+            'summarize the meetings', 'summary of meetings', 'summary of all'
+        ]
+        
+        query_lower = query.lower()
+        for keyword in summary_keywords:
+            if keyword in query_lower:
+                return True
+        return False
+
+    def answer_query(self, query: str, user_id: str, document_ids: List[str] = None, project_id: str = None, meeting_id: str = None, meeting_ids: List[str] = None, date_filters: List[str] = None, folder_path: str = None, context_limit: int = 10, include_context: bool = False) -> Union[str, Tuple[str, str]]:
         """Answer user query using hybrid search and intelligent context selection"""
         
-        # Detect timeframe filtering
-        timeframe_keywords = {
-            'last week': 'last_week', 'past week': 'last_week', 'this week': 'last_week',
-            'last month': 'last_month', 'past month': 'last_month', 'this month': 'last_month',
-            'recent': 'recent', 'recently': 'recent',
-            'last quarter': 'last_quarter', 'past quarter': 'last_quarter',
-            'last 3 months': 'last_3_months', 'past 3 months': 'last_3_months',
-            'last 6 months': 'last_6_months', 'last year': 'last_year'
-        }
+        # Check if this is a summary query and no specific documents are selected
+        is_summary_query = self.detect_summary_query(query)
         
-        detected_timeframe = None
-        for keyword, timeframe in timeframe_keywords.items():
-            if keyword in query.lower():
-                detected_timeframe = timeframe
-                break
+        # Handle enhanced @ mention filters
+        if meeting_ids:
+            logger.info(f"Enhanced meeting filters: {meeting_ids}")
+            # TODO: Implement support for multiple meeting IDs
+            # For now, use the first meeting ID
+            if meeting_ids and not meeting_id:
+                meeting_id = meeting_ids[0]
+        
+        if date_filters:
+            logger.info(f"Date filters: {date_filters}")
+            # TODO: Implement date filtering logic
+            # For now, we'll rely on natural language processing in the query
+        
+        # If no specific documents are provided, include all user documents
+        if not document_ids:
+            logger.info("No specific documents provided, including all user documents")
+            if folder_path:
+                # Use folder-based filtering
+                document_ids = self.vector_db.get_user_documents_by_folder(user_id, folder_path, project_id, meeting_id)
+                logger.info(f"Including {len(document_ids)} documents from folder {folder_path} for user {user_id}")
+            else:
+                # Use standard scope-based filtering
+                document_ids = self.vector_db.get_user_documents_by_scope(user_id, project_id, meeting_id)
+                logger.info(f"Including {len(document_ids)} documents for user {user_id}")
+        
+        # Enhanced intelligent timeframe detection
+        detected_timeframe = self._detect_timeframe_from_query(query)
         
         # Get relevant documents by timeframe if specified
         if detected_timeframe:
-            timeframe_docs = self.vector_db.get_documents_by_timeframe(detected_timeframe)
+            logger.info(f"Detected timeframe: {detected_timeframe}")
+            timeframe_docs = self.vector_db.get_documents_by_timeframe(detected_timeframe, user_id)
             if not timeframe_docs:
                 error_msg = f"I don't have any meeting documents from the {detected_timeframe.replace('_', ' ')} timeframe."
                 return (error_msg, "") if include_context else error_msg
+            
+            # Filter document_ids to only include documents from the detected timeframe
+            if not document_ids:
+                document_ids = [doc.document_id for doc in timeframe_docs]
+                logger.info(f"Using {len(document_ids)} documents from {detected_timeframe} timeframe")
+            else:
+                # Intersect with timeframe documents
+                timeframe_doc_ids = {doc.document_id for doc in timeframe_docs}
+                document_ids = [doc_id for doc_id in document_ids if doc_id in timeframe_doc_ids]
+                logger.info(f"Filtered to {len(document_ids)} documents in {detected_timeframe} timeframe")
+            
+            # Generate enhanced summary if this is a summary query with date context
+            if is_summary_query and len(timeframe_docs) > 1:
+                return self._generate_date_based_summary(query, timeframe_docs, detected_timeframe, include_context)
         
         # Perform hybrid search
-        relevant_chunks = self.hybrid_search(query, top_k=context_limit * 3)
+        relevant_chunks = self.hybrid_search(query, user_id, project_id, meeting_id, top_k=context_limit * 3)
         
         # Filter chunks by document IDs if specified
         if document_ids:

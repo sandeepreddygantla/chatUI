@@ -11,6 +11,13 @@ let availableDocuments = [];
 let selectedDocuments = [];
 let isDocumentDropdownOpen = false;
 
+// Enhanced @ mention variables
+let availableProjects = [];
+let availableMeetings = [];
+let availableFolders = [];
+let selectedMentions = [];
+let currentMentionType = 'document';
+
 // Storage keys
 const STORAGE_KEYS = {
     CONVERSATIONS: 'uhg_conversations',
@@ -217,6 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize markdown parser
     initializeMarkdownParser();
     
+    // Check authentication status first
+    checkAuthenticationStatus();
+    
     // Setup event listeners
     setupEventListeners();
     
@@ -240,6 +250,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load documents for @ mentions
     loadDocuments();
+    
+    // Load projects and meetings for enhanced @ mentions
+    loadProjects();
+    loadMeetings();
+    loadFolders();
     
     // Setup @ mention detection
     setupAtMentionDetection();
@@ -418,8 +433,14 @@ function showWelcomeScreen() {
             <div class="sample-prompts">
                 <div class="sample-prompts-title">Try these sample prompts:</div>
                 <div class="sample-prompt-grid">
+                    <button class="sample-prompt" onclick="insertSampleQuery('Summarize all meetings')">
+                        📄 Summarize all meetings
+                    </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('What are the main topics discussed in recent meetings?')">
                         What are the main topics discussed in recent meetings?
+                    </button>
+                    <button class="sample-prompt" onclick="insertSampleQuery('Give me an overview of all meeting highlights')">
+                        📋 Give me an overview of all meeting highlights
                     </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('List all action items from last week\\'s meetings')">
                         List all action items from last week's meetings
@@ -427,14 +448,14 @@ function showWelcomeScreen() {
                     <button class="sample-prompt" onclick="insertSampleQuery('Who are the key participants and their roles?')">
                         Who are the key participants and their roles?
                     </button>
+                    <button class="sample-prompt" onclick="insertSampleQuery('Provide a comprehensive summary of all meetings')">
+                        🗂️ Provide a comprehensive summary of all meetings
+                    </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('Summarize decisions made in project meetings')">
                         Summarize decisions made in project meetings
                     </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('What challenges or blockers were identified?')">
                         What challenges or blockers were identified?
-                    </button>
-                    <button class="sample-prompt" onclick="insertSampleQuery('Show me upcoming deadlines and milestones')">
-                        Show me upcoming deadlines and milestones
                     </button>
                 </div>
             </div>
@@ -456,6 +477,21 @@ function handleKeyPress(event) {
         event.preventDefault();
         sendMessage();
     }
+}
+
+// Function to detect summary queries in frontend
+function detectSummaryQuery(query) {
+    const summaryKeywords = [
+        'summarize', 'summary', 'summaries', 'overview', 'brief', 
+        'recap', 'highlights', 'key points', 'main points',
+        'all meetings', 'all documents', 'overall', 'across all',
+        'consolidate', 'aggregate', 'compile', 'comprehensive',
+        'meetings summary', 'meeting summaries', 'summarize meetings',
+        'summarize the meetings', 'summary of meetings', 'summary of all'
+    ];
+    
+    const queryLower = query.toLowerCase();
+    return summaryKeywords.some(keyword => queryLower.includes(keyword));
 }
 
 // Updated sendMessage function to handle conversation context properly
@@ -481,8 +517,14 @@ async function sendMessage() {
     // Hide document dropdown if open
     hideDocumentDropdown();
 
-    // Parse message for document selection
-    const { cleanMessage, documentIds } = parseMessageForDocuments(message);
+    // Parse message for document selection and enhanced @ mentions
+    const { cleanMessage, documentIds, projectIds, meetingIds, dateFilters, folderPath } = parseMessageForDocuments(message);
+    
+    // Check if this is a summary query and show notification
+    const isSummaryQuery = detectSummaryQuery(message);
+    if (isSummaryQuery && !documentIds) {
+        showNotification('📊 Processing summary across all available documents...');
+    }
 
     // Add user message to UI and history
     addMessageToUI('user', message, true);
@@ -494,6 +536,7 @@ async function sendMessage() {
     
     input.value = '';
     selectedDocuments = []; // Clear selected documents after sending
+    selectedMentions = []; // Clear selected mentions after sending
     updateSelectedDocuments();
     autoResize();
 
@@ -504,6 +547,18 @@ async function sendMessage() {
         const requestBody = { message: cleanMessage };
         if (documentIds) {
             requestBody.document_ids = documentIds;
+        }
+        if (projectIds) {
+            requestBody.project_ids = projectIds;
+        }
+        if (meetingIds) {
+            requestBody.meeting_ids = meetingIds;
+        }
+        if (dateFilters) {
+            requestBody.date_filters = dateFilters;
+        }
+        if (folderPath) {
+            requestBody.folder_path = folderPath;
         }
         
         const response = await fetch('/api/chat', {
@@ -608,12 +663,52 @@ function copyToClipboard(text) {
     });
 }
 
-function showNotification(message) {
+function showNotification(message, type = 'success') {
+    console.log('Creating notification:', message, 'type:', type);
+    
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(n => n.remove());
+    
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
+    
+    // Different colors for different types
+    const colors = {
+        success: '#28a745',
+        error: '#dc3545',
+        info: '#17a2b8',
+        warning: '#ffc107'
+    };
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${colors[type] || colors.success};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        z-index: 10000;
+        font-size: 16px;
+        font-weight: 600;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease-out;
+        max-width: 400px;
+        word-wrap: break-word;
+        border-left: 4px solid rgba(255, 255, 255, 0.3);
+    `;
+    
     document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    console.log('Notification added to DOM');
+    
+    setTimeout(() => {
+        console.log('Removing notification');
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 function addFollowUpQuestions(questions) {
@@ -677,6 +772,10 @@ async function loadDocuments() {
             if (data.success) {
                 availableDocuments = data.documents;
                 console.log(`Loaded ${availableDocuments.length} documents for @ mention selection`);
+                console.log('📝 Available filenames:', availableDocuments.map(d => d.filename));
+                
+                // Also reload folders when documents are loaded to keep them in sync
+                await loadFolders();
             }
         }
     } catch (error) {
@@ -688,13 +787,15 @@ function detectAtMention(input) {
     const text = input.value;
     const cursorPos = input.selectionStart;
     
-    // Find @ symbols and check if cursor is after one
+    // Find @ or # symbols and check if cursor is after one
     let atPos = -1;
+    let symbol = '';
     for (let i = cursorPos - 1; i >= 0; i--) {
-        if (text[i] === '@') {
-            // Check if @ is at start or after whitespace
+        if (text[i] === '@' || text[i] === '#') {
+            // Check if symbol is at start or after whitespace
             if (i === 0 || /\s/.test(text[i - 1])) {
                 atPos = i;
+                symbol = text[i];
                 break;
             }
         }
@@ -704,11 +805,127 @@ function detectAtMention(input) {
     }
     
     if (atPos !== -1) {
-        const searchText = text.substring(atPos + 1, cursorPos);
-        return { isActive: true, searchText, atPos };
+        const fullMention = text.substring(atPos + 1, cursorPos);
+        
+        console.log('🔍 detectAtMention found symbol:', { symbol, atPos, fullMention, text });
+        
+        // Parse mention syntax (@ for projects/meetings/dates, # for folders/files)
+        const mentionData = symbol === '#' ? parseFolderMention(fullMention) : parseEnhancedMention(fullMention);
+        
+        console.log('🔍 mentionData result:', mentionData);
+        
+        return { 
+            isActive: true, 
+            searchText: fullMention,
+            atPos,
+            symbol: symbol,
+            ...mentionData
+        };
     }
     
-    return { isActive: false, searchText: '', atPos: -1 };
+    return { isActive: false, searchText: '', atPos: -1, type: 'document', searchTerm: '' };
+}
+
+// Parse folder mentions with # symbol
+function parseFolderMention(mentionText) {
+    console.log('🔍 parseFolderMention called with:', mentionText);
+    
+    if (mentionText === '') {
+        // Just # typed, show folders
+        return {
+            type: 'folder_list',
+            searchTerm: '',
+            prefix: '',
+            value: ''
+        };
+    }
+    
+    // Check if there's a > at the end to show files within folder
+    const hasArrow = mentionText.endsWith('>');
+    const folderName = hasArrow ? mentionText.slice(0, -1) : mentionText;
+    
+    console.log('🔍 Parsing folder mention:', { mentionText, hasArrow, folderName });
+    
+    const result = {
+        type: hasArrow ? 'folder_files' : 'folder_selected',
+        searchTerm: folderName,
+        prefix: '',
+        value: folderName,
+        showFiles: hasArrow
+    };
+    
+    console.log('🔍 parseFolderMention result:', result);
+    return result;
+}
+
+function parseEnhancedMention(mentionText) {
+    // Enhanced @ mention parsing for @project:name, @meeting:name, @date:today syntax
+    const colonIndex = mentionText.indexOf(':');
+    
+    if (colonIndex === -1) {
+        // Simple @ mention (legacy document search)
+        return {
+            type: 'document',
+            searchTerm: mentionText,
+            prefix: '',
+            value: mentionText
+        };
+    }
+    
+    const prefix = mentionText.substring(0, colonIndex).toLowerCase();
+    const value = mentionText.substring(colonIndex + 1);
+    
+    // Determine mention type
+    switch (prefix) {
+        case 'project':
+            return {
+                type: 'project',
+                searchTerm: value,
+                prefix: 'project',
+                value: value
+            };
+        case 'meeting':
+            return {
+                type: 'meeting',
+                searchTerm: value,
+                prefix: 'meeting',
+                value: value
+            };
+        case 'date':
+            return {
+                type: 'date',
+                searchTerm: value,
+                prefix: 'date',
+                value: value
+            };
+        case 'folder':
+            // Check if there's a / at the end to show files within folder
+            const hasSlash = value.endsWith('/');
+            const folderName = hasSlash ? value.slice(0, -1) : value;
+            console.log('🔍 Folder parsing:', { value, hasSlash, folderName, type: hasSlash ? 'folder_files' : 'folder' });
+            return {
+                type: hasSlash ? 'folder_files' : 'folder',
+                searchTerm: folderName,
+                prefix: 'folder',
+                value: folderName,
+                showFiles: hasSlash
+            };
+        case 'file':
+            return {
+                type: 'file',
+                searchTerm: value,
+                prefix: 'file',
+                value: value
+            };
+        default:
+            // Unknown prefix, treat as document search
+            return {
+                type: 'document',
+                searchTerm: mentionText,
+                prefix: '',
+                value: mentionText
+            };
+    }
 }
 
 function filterDocuments(searchText) {
@@ -732,37 +949,95 @@ function showDocumentDropdown(searchText = '') {
         return;
     }
     
-    const filteredDocs = filterDocuments(searchText);
+    // Update header to show both options
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📁 Select Folder or 📄 File';
+    }
     
-    if (filteredDocs.length === 0) {
-        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No matching documents found</div>';
-    } else {
-        documentList.innerHTML = filteredDocs.map(doc => {
+    console.log('🔍 @ dropdown - showing folders and files');
+    console.log('Available folders:', availableFolders.length);
+    console.log('Available documents:', availableDocuments.length);
+    console.log('Search text:', searchText);
+    
+    // Show folders first, then individual files
+    const filteredFolders = filterFolders(searchText);
+    const filteredDocs = availableDocuments.filter(doc => 
+        searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
+    );
+    
+    console.log('Filtered folders:', filteredFolders.length);
+    console.log('Filtered documents:', filteredDocs.length);
+    
+    let html = '';
+    
+    // Add folders section
+    if (filteredFolders.length > 0) {
+        html += '<div style="padding: 8px 12px; background: #F3F4F6; font-weight: 600; font-size: 12px; color: #4B5563; border-bottom: 1px solid #E5E7EB;">📁 FOLDERS (use # symbol)</div>';
+        html += filteredFolders.map(folder => `
+            <div class="document-item folder-item" data-folder-path="${folder.folder_path}" data-folder-name="${folder.display_name}">
+                <div class="document-icon">📁</div>
+                <div class="document-info">
+                    <div class="document-filename" title="${folder.display_name}">${folder.display_name}</div>
+                    <div class="document-meta">
+                        <div class="document-date">📂 ${folder.folder_path}</div>
+                        <div class="document-size">📄 ${getDocumentCountForFolder(folder.folder_path)} files • Use #${folder.display_name}> to browse files</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Add files section
+    if (filteredDocs.length > 0) {
+        html += '<div style="padding: 8px 12px; background: #F0F9FF; font-weight: 600; font-size: 12px; color: #1E40AF; border-bottom: 1px solid #DBEAFE; margin-top: 4px;">📄 INDIVIDUAL FILES</div>';
+        html += filteredDocs.map(doc => {
             const isSelected = selectedDocuments.some(selected => selected.document_id === doc.document_id);
             const date = new Date(doc.date).toLocaleDateString();
             const size = formatFileSize(doc.file_size);
             
+            // Add folder info to help identify files
+            const folderInfo = doc.folder_path ? doc.folder_path.split('/').pop() : 'Default';
+            
             return `
-                <div class="document-item ${isSelected ? 'selected' : ''}" data-doc-id="${doc.document_id}">
+                <div class="document-item file-item ${isSelected ? 'selected' : ''}" data-doc-id="${doc.document_id}">
                     <div class="document-icon">📄</div>
                     <div class="document-info">
                         <div class="document-filename" title="${doc.filename}">${doc.filename}</div>
                         <div class="document-meta">
                             <div class="document-date">📅 ${date}</div>
-                            <div class="document-size">📊 ${size}</div>
+                            <div class="document-size">📁 ${folderInfo} • 📊 ${size}</div>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+    
+    if (html === '') {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No folders or files found</div>';
+    } else {
+        documentList.innerHTML = html;
         
-        // Add click listeners
-        documentList.querySelectorAll('.document-item').forEach(item => {
+        // Add click listeners for folders
+        documentList.querySelectorAll('.folder-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const folderName = item.dataset.folderName;
+                const folderPath = item.dataset.folderPath;
+                const folder = filteredFolders.find(f => f.folder_path === folderPath);
+                if (folder) {
+                    selectMention('folder', folder.display_name, { folder_path: folderPath });
+                }
+            });
+        });
+        
+        // Add click listeners for files
+        documentList.querySelectorAll('.file-item').forEach(item => {
             item.addEventListener('click', () => {
                 const docId = item.dataset.docId;
                 const doc = filteredDocs.find(d => d.document_id === docId);
                 if (doc) {
-                    selectDocument(doc);
+                    selectSingleFile(doc);
                 }
             });
         });
@@ -794,10 +1069,453 @@ function showDocumentDropdown(searchText = '') {
     }, 0);
 }
 
+function showFolderFilesDropdown(folderName, searchText = '') {
+    console.log('🔍 showFolderFilesDropdown called with:', { folderName, searchText });
+    console.log('🔍 Available folders:', availableFolders);
+    console.log('🔍 Available documents:', availableDocuments);
+    
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = `📄 Files in ${folderName}`;
+    }
+    
+    // Find the folder
+    const folder = availableFolders.find(f => f.display_name === folderName);
+    console.log('🔍 Found folder:', folder);
+    
+    if (folder) {
+        // Get files from this folder - use multiple strategies
+        let folderDocs = [];
+        
+        // Strategy 1: If folder has pre-stored documents (from folder creation)
+        if (folder.documents && folder.documents.length > 0) {
+            folderDocs = folder.documents.filter(doc => 
+                searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
+            );
+            console.log('🔍 Strategy 1 - Using pre-stored documents:', folderDocs);
+        } else {
+            console.log('🔍 Strategy 2 - Matching by project_id. Folder project_id:', folder.project_id);
+            
+            // Strategy 2: Match by project_id or show all documents if default folder
+            if (folder.project_id === 'default' || folderName === 'Default Folder') {
+                // For default folder, show all documents
+                folderDocs = availableDocuments.filter(doc => 
+                    searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
+                );
+                console.log('🔍 Default folder - showing all documents:', folderDocs);
+            } else {
+                // Match by project_id
+                folderDocs = availableDocuments.filter(doc => {
+                    const matchesByProjectId = doc.project_id === folder.project_id;
+                    const matchesByFolderPath = doc.folder_path === folder.folder_path;
+                    const matchesSearch = searchText === '' || 
+                                        doc.filename.toLowerCase().includes(searchText.toLowerCase());
+                    
+                    console.log('🔍 Document check:', {
+                        filename: doc.filename,
+                        doc_project_id: doc.project_id,
+                        folder_project_id: folder.project_id,
+                        matchesByProjectId,
+                        matchesByFolderPath,
+                        matchesSearch
+                    });
+                    
+                    return (matchesByProjectId || matchesByFolderPath) && matchesSearch;
+                });
+                console.log('🔍 Project-based matching result:', folderDocs);
+            }
+        }
+        
+        if (folderDocs.length === 0) {
+            documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No files found in this folder</div>';
+        } else {
+            documentList.innerHTML = folderDocs.map(doc => {
+                const isSelected = selectedDocuments.some(selected => selected.document_id === doc.document_id);
+                const date = new Date(doc.date).toLocaleDateString();
+                const size = formatFileSize(doc.file_size);
+                
+                return `
+                    <div class="document-item ${isSelected ? 'selected' : ''}" data-doc-id="${doc.document_id}">
+                        <div class="document-icon">📄</div>
+                        <div class="document-info">
+                            <div class="document-filename" title="${doc.filename}">${doc.filename}</div>
+                            <div class="document-meta">
+                                <div class="document-date">📅 ${date}</div>
+                                <div class="document-size">📊 ${size}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click listeners for files
+            documentList.querySelectorAll('.document-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const docId = item.dataset.docId;
+                    const doc = folderDocs.find(d => d.document_id === docId);
+                    if (doc) {
+                        selectDocument(doc);
+                    }
+                });
+            });
+        }
+    } else {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">Folder not found</div>';
+    }
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
 function hideDocumentDropdown() {
     const dropdown = document.getElementById('document-dropdown');
     dropdown.classList.remove('active');
     isDocumentDropdownOpen = false;
+}
+
+// Enhanced @ mention dropdown functions
+function showEnhancedDropdown(mention) {
+    currentMentionType = mention.type;
+    console.log('🔍 showEnhancedDropdown called with:', mention);
+    
+    switch (mention.type) {
+        case 'document':
+            showDocumentDropdown(mention.searchTerm);
+            break;
+        case 'project':
+            showProjectDropdown(mention.searchTerm);
+            break;
+        case 'meeting':
+            showMeetingDropdown(mention.searchTerm);
+            break;
+        case 'date':
+            showDateDropdown(mention.searchTerm);
+            break;
+        case 'folder':
+            showFolderDropdown(mention.searchTerm);
+            break;
+        case 'folder_list':
+            showFolderListDropdown(mention.searchTerm);
+            break;
+        case 'folder_selected':
+            showSelectedFolderDropdown(mention.searchTerm);
+            break;
+        case 'folder_files':
+            showFolderFilesDropdown(mention.searchTerm);
+            break;
+        default:
+            showDocumentDropdown(mention.searchTerm);
+    }
+}
+
+function showFolderListDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📁 Select Folder (# symbol)';
+    }
+    
+    const filteredFolders = filterFolders(searchText);
+    console.log('Filtered folders:', filteredFolders);
+    
+    if (filteredFolders.length === 0) {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No folders found</div>';
+    } else {
+        documentList.innerHTML = filteredFolders.map(folder => `
+            <div class="document-item folder-item" data-folder-name="${folder.display_name}">
+                <div class="document-icon">📁</div>
+                <div class="document-info">
+                    <div class="document-filename" title="${folder.display_name}">${folder.display_name}</div>
+                    <div class="document-meta">
+                        <div class="document-date">📂 Type "#${folder.display_name}>" to browse files</div>
+                        <div class="document-size">📄 ${getDocumentCountForFolder(folder.folder_path)} files</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Add click listeners for folders
+    documentList.querySelectorAll('.folder-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const folderName = item.dataset.folderName;
+            selectFolderMention(folderName);
+        });
+    });
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
+function showSelectedFolderDropdown(folderName) {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = `📁 Folder Selected: ${folderName}`;
+    }
+    
+    documentList.innerHTML = `
+        <div style="padding: 16px; text-align: center;">
+            <div style="margin-bottom: 12px;">
+                <strong>📁 ${folderName}</strong>
+            </div>
+            <div style="color: #6B7280; font-size: 14px; margin-bottom: 8px;">
+                This will search all files in this folder
+            </div>
+            <div style="color: #9CA3AF; font-size: 12px;">
+                Add ">" to browse individual files: #${folderName}>
+            </div>
+        </div>
+    `;
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
+function selectFolderMention(folderName) {
+    const input = document.getElementById('message-input');
+    const mention = detectAtMention(input);
+    
+    if (mention.isActive) {
+        const text = input.value;
+        const beforeSymbol = text.substring(0, mention.atPos);
+        const afterMention = text.substring(input.selectionStart);
+        
+        // Replace the # mention with the selected folder
+        const replacement = `#${folderName}`;
+        
+        input.value = beforeSymbol + replacement + ' ' + afterMention;
+        input.focus();
+        
+        // Store the mention data for message processing
+        selectedMentions.push({
+            type: 'folder_selected',
+            displayName: folderName,
+            data: { folder_name: folderName }
+        });
+    }
+    
+    hideEnhancedDropdown();
+}
+
+function hideEnhancedDropdown() {
+    hideDocumentDropdown();
+}
+
+function showProjectDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header to indicate project selection
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📁 Select Project';
+    }
+    
+    const filteredProjects = filterProjects(searchText);
+    
+    if (filteredProjects.length === 0) {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No matching projects found</div>';
+    } else {
+        documentList.innerHTML = filteredProjects.map(project => `
+            <div class="document-item" data-project-id="${project.project_id}">
+                <div class="document-icon">📁</div>
+                <div class="document-info">
+                    <div class="document-filename" title="${project.project_name}">${project.project_name}</div>
+                    <div class="document-meta">
+                        <div class="document-date">📅 ${new Date(project.created_at).toLocaleDateString()}</div>
+                        <div class="document-size">📝 ${project.description || 'No description'}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add click listeners
+        documentList.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const projectId = item.dataset.projectId;
+                const project = filteredProjects.find(p => p.project_id === projectId);
+                if (project) {
+                    selectMention('project', project.project_name, { project_id: projectId });
+                }
+            });
+        });
+    }
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
+function showMeetingDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header to indicate meeting selection
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📋 Select Meeting';
+    }
+    
+    const filteredMeetings = filterMeetings(searchText);
+    
+    if (filteredMeetings.length === 0) {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No matching meetings found</div>';
+    } else {
+        documentList.innerHTML = filteredMeetings.map(meeting => `
+            <div class="document-item" data-meeting-id="${meeting.meeting_id}">
+                <div class="document-icon">📋</div>
+                <div class="document-info">
+                    <div class="document-filename" title="${meeting.title}">${meeting.title}</div>
+                    <div class="document-meta">
+                        <div class="document-date">📅 ${new Date(meeting.date).toLocaleDateString()}</div>
+                        <div class="document-size">👥 ${meeting.participants || 'No participants listed'}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add click listeners
+        documentList.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const meetingId = item.dataset.meetingId;
+                const meeting = filteredMeetings.find(m => m.meeting_id === meetingId);
+                if (meeting) {
+                    selectMention('meeting', meeting.title, { meeting_id: meetingId });
+                }
+            });
+        });
+    }
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
+function showDateDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header to indicate date selection
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📅 Select Date';
+    }
+    
+    const dateOptions = getDateOptions(searchText);
+    
+    documentList.innerHTML = dateOptions.map(dateOption => `
+        <div class="document-item" data-date-value="${dateOption.value}">
+            <div class="document-icon">📅</div>
+            <div class="document-info">
+                <div class="document-filename">${dateOption.label}</div>
+                <div class="document-meta">
+                    <div class="document-date">${dateOption.description}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add click listeners
+    documentList.querySelectorAll('.document-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const dateValue = item.dataset.dateValue;
+            const dateOption = dateOptions.find(d => d.value === dateValue);
+            if (dateOption) {
+                selectMention('date', dateOption.value, { date_filter: dateValue });
+            }
+        });
+    });
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
+}
+
+function showFolderDropdown(searchText = '') {
+    const dropdown = document.getElementById('document-dropdown');
+    const documentList = document.getElementById('document-list');
+    
+    if (!dropdown || !documentList) {
+        console.error('Dropdown elements not found');
+        return;
+    }
+    
+    // Update header to indicate folder selection
+    const header = dropdown.querySelector('.document-dropdown-header');
+    if (header) {
+        header.textContent = '📁 Select Folder';
+    }
+    
+    const filteredFolders = filterFolders(searchText);
+    
+    if (filteredFolders.length === 0) {
+        documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No matching folders found</div>';
+    } else {
+        documentList.innerHTML = filteredFolders.map(folder => `
+            <div class="document-item" data-folder-path="${folder.folder_path}">
+                <div class="document-icon">📁</div>
+                <div class="document-info">
+                    <div class="document-filename" title="${folder.display_name}">${folder.display_name}</div>
+                    <div class="document-meta">
+                        <div class="document-date">📂 ${folder.folder_path}</div>
+                        <div class="document-size">📄 ${getDocumentCountForFolder(folder.folder_path)} documents</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add click listeners
+        documentList.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const folderPath = item.dataset.folderPath;
+                const folder = filteredFolders.find(f => f.folder_path === folderPath);
+                if (folder) {
+                    selectMention('folder', folder.display_name, { folder_path: folderPath });
+                }
+            });
+        });
+    }
+    
+    dropdown.classList.add('active');
+    isDocumentDropdownOpen = true;
 }
 
 function selectDocument(doc) {
@@ -855,11 +1573,526 @@ function parseMessageForDocuments(message) {
     // Extract selected document IDs
     const documentIds = selectedDocuments.map(doc => doc.document_id);
     
-    // Return clean message and document IDs
-    return {
-        cleanMessage: message.trim(),
-        documentIds: documentIds.length > 0 ? documentIds : null
+    // Parse enhanced @ mentions from the message
+    const enhancedMentions = parseEnhancedMentionsFromMessage(message);
+    
+    // Clean the message by removing processed @ and # mentions
+    let cleanMessage = message.trim();
+    enhancedMentions.forEach(mention => {
+        let mentionText;
+        if (mention.type === 'folder_files' || mention.type === 'folder_selected') {
+            // Handle # syntax for folders
+            mentionText = mention.type === 'folder_files' ? `#${mention.value}>` : `#${mention.value}`;
+        } else {
+            // Handle @ syntax for other mentions
+            mentionText = `@${mention.prefix}:${mention.value}`;
+        }
+        cleanMessage = cleanMessage.replace(mentionText, '').trim();
+    });
+    
+    // Combine all filtering data
+    const filterData = {
+        documentIds: documentIds.length > 0 ? documentIds : null,
+        projectIds: null,
+        meetingIds: null,
+        dateFilters: null,
+        folderPath: null
     };
+    
+    // Extract filter data from enhanced mentions
+    enhancedMentions.forEach(mention => {
+        switch (mention.type) {
+            case 'project':
+                if (!filterData.projectIds) filterData.projectIds = [];
+                const project = availableProjects.find(p => p.project_name === mention.value);
+                if (project) {
+                    filterData.projectIds.push(project.project_id);
+                }
+                break;
+            case 'meeting':
+                if (!filterData.meetingIds) filterData.meetingIds = [];
+                const meeting = availableMeetings.find(m => m.title === mention.value);
+                if (meeting) {
+                    filterData.meetingIds.push(meeting.meeting_id);
+                }
+                break;
+            case 'date':
+                if (!filterData.dateFilters) filterData.dateFilters = [];
+                filterData.dateFilters.push(mention.value);
+                break;
+            case 'folder':
+            case 'folder_files':
+            case 'folder_selected':
+                const folder = availableFolders.find(f => f.display_name === mention.value);
+                if (folder) {
+                    filterData.folderPath = folder.folder_path;
+                }
+                break;
+            case 'file':
+                if (!filterData.documentIds) filterData.documentIds = [];
+                const document = availableDocuments.find(d => d.filename === mention.value);
+                if (document) {
+                    filterData.documentIds.push(document.document_id);
+                    console.log('✅ File filter added:', mention.value, 'Document ID:', document.document_id);
+                } else {
+                    console.log('❌ File not found:', mention.value);
+                }
+                break;
+        }
+    });
+    
+    // Apply folder-based filtering to selected documents
+    // If folder is selected and documents are selected, filter documents to only those in the folder
+    if (filterData.folderPath && filterData.documentIds) {
+        const folderDocuments = availableDocuments.filter(doc => doc.folder_path === filterData.folderPath);
+        const folderDocumentIds = folderDocuments.map(doc => doc.document_id);
+        filterData.documentIds = filterData.documentIds.filter(id => folderDocumentIds.includes(id));
+        
+        // If no documents remain after filtering, clear the document IDs to use folder filtering
+        if (filterData.documentIds.length === 0) {
+            filterData.documentIds = null;
+        }
+    }
+    
+    return {
+        cleanMessage,
+        ...filterData
+    };
+}
+
+function parseEnhancedMentionsFromMessage(message) {
+    const mentions = [];
+    
+    // Parse @ mentions (projects, meetings, dates, files)
+    const atMentionRegex = /@(project|meeting|date|file):([^@\s]+)/g;
+    let match;
+    
+    while ((match = atMentionRegex.exec(message)) !== null) {
+        mentions.push({
+            type: match[1],
+            prefix: match[1],
+            value: match[2],
+            fullMatch: match[0]
+        });
+    }
+    
+    // Parse # mentions (folders)
+    const folderMentionRegex = /#([^#\s>]+)>/g;
+    while ((match = folderMentionRegex.exec(message)) !== null) {
+        mentions.push({
+            type: 'folder_files',
+            prefix: '',
+            value: match[1],
+            fullMatch: match[0]
+        });
+    }
+    
+    // Parse folder selections without >
+    const folderSelectionRegex = /#([^#\s>]+)(?!>)/g;
+    while ((match = folderSelectionRegex.exec(message)) !== null) {
+        mentions.push({
+            type: 'folder_selected',
+            prefix: '',
+            value: match[1],
+            fullMatch: match[0]
+        });
+    }
+    
+    return mentions;
+}
+
+// Enhanced @ mention helper functions
+function filterProjects(searchText) {
+    if (!searchText.trim()) {
+        return availableProjects;
+    }
+    
+    const search = searchText.toLowerCase();
+    return availableProjects.filter(project => 
+        project.project_name.toLowerCase().includes(search) ||
+        (project.description && project.description.toLowerCase().includes(search))
+    );
+}
+
+function filterMeetings(searchText) {
+    if (!searchText.trim()) {
+        return availableMeetings;
+    }
+    
+    const search = searchText.toLowerCase();
+    return availableMeetings.filter(meeting => 
+        meeting.title.toLowerCase().includes(search) ||
+        (meeting.participants && meeting.participants.toLowerCase().includes(search))
+    );
+}
+
+function filterFolders(searchText) {
+    if (!searchText.trim()) {
+        return availableFolders;
+    }
+    
+    const search = searchText.toLowerCase();
+    return availableFolders.filter(folder => 
+        folder.display_name.toLowerCase().includes(search) ||
+        folder.folder_path.toLowerCase().includes(search)
+    );
+}
+
+function getDocumentCountForFolder(folderPath) {
+    if (!availableDocuments || availableDocuments.length === 0) {
+        return 0;
+    }
+    
+    // If looking for documents by folder_path
+    const countByFolderPath = availableDocuments.filter(doc => doc.folder_path === folderPath).length;
+    
+    // If no documents found by folder_path, try to match by project pattern
+    if (countByFolderPath === 0 && folderPath.includes('project_')) {
+        const projectId = folderPath.split('project_')[1];
+        const countByProject = availableDocuments.filter(doc => doc.project_id === projectId).length;
+        return countByProject;
+    }
+    
+    return countByFolderPath;
+}
+
+function getDateOptions(searchText) {
+    const today = new Date();
+    
+    // Calculate week boundaries (Monday to Sunday)
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - today.getDay() + 1);
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+    
+    const lastWeekStart = new Date(currentWeekStart);
+    lastWeekStart.setDate(currentWeekStart.getDate() - 7);
+    const lastWeekEnd = new Date(currentWeekStart);
+    lastWeekEnd.setDate(currentWeekStart.getDate() - 1);
+    
+    // Calculate month boundaries
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+    
+    const options = [
+        // Current periods
+        {
+            label: 'Current Week',
+            value: 'current_week',
+            description: `${currentWeekStart.toLocaleDateString()} - ${currentWeekEnd.toLocaleDateString()}`
+        },
+        {
+            label: 'Current Month',
+            value: 'current_month',
+            description: `${currentMonthStart.toLocaleDateString()} - ${currentMonthEnd.toLocaleDateString()}`
+        },
+        {
+            label: 'Current Year',
+            value: 'current_year',
+            description: today.getFullYear().toString()
+        },
+        
+        // Last periods
+        {
+            label: 'Last Week',
+            value: 'last_week',
+            description: `${lastWeekStart.toLocaleDateString()} - ${lastWeekEnd.toLocaleDateString()}`
+        },
+        {
+            label: 'Last Month',
+            value: 'last_month',
+            description: `${lastMonthStart.toLocaleDateString()} - ${lastMonthEnd.toLocaleDateString()}`
+        },
+        {
+            label: 'Last Quarter',
+            value: 'last_quarter',
+            description: 'Previous 3 months'
+        },
+        {
+            label: 'Last Year',
+            value: 'last_year',
+            description: (today.getFullYear() - 1).toString()
+        },
+        
+        // Rolling periods
+        {
+            label: 'Last 7 Days',
+            value: 'last_7_days',
+            description: 'Rolling 7 days'
+        },
+        {
+            label: 'Last 14 Days',
+            value: 'last_14_days',
+            description: 'Rolling 2 weeks'
+        },
+        {
+            label: 'Last 30 Days',
+            value: 'last_30_days',
+            description: 'Rolling 30 days'
+        },
+        {
+            label: 'Last 3 Months',
+            value: 'last_3_months',
+            description: 'Rolling 90 days'
+        },
+        {
+            label: 'Last 6 Months',
+            value: 'last_6_months',
+            description: 'Rolling 180 days'
+        },
+        
+        // Recent
+        {
+            label: 'Recent',
+            value: 'recent',
+            description: 'Last 30 days'
+        }
+    ];
+    
+    if (!searchText.trim()) {
+        return options;
+    }
+    
+    const search = searchText.toLowerCase();
+    return options.filter(option => 
+        option.label.toLowerCase().includes(search) ||
+        option.value.toLowerCase().includes(search)
+    );
+}
+
+function selectMention(type, displayName, data) {
+    const input = document.getElementById('message-input');
+    const mention = detectAtMention(input);
+    
+    if (mention.isActive) {
+        const text = input.value;
+        const beforeAt = text.substring(0, mention.atPos);
+        const afterMention = text.substring(input.selectionStart);
+        
+        // Replace the @ mention with the selected item
+        let replacement = '';
+        switch (type) {
+            case 'project':
+                replacement = `@project:${displayName}`;
+                break;
+            case 'meeting':
+                replacement = `@meeting:${displayName}`;
+                break;
+            case 'date':
+                replacement = `@date:${displayName}`;
+                break;
+            case 'folder':
+                replacement = `#${displayName}`;
+                break;
+            default:
+                replacement = displayName;
+        }
+        
+        input.value = beforeAt + replacement + ' ' + afterMention;
+        input.focus();
+        
+        // Store the mention data for message processing
+        selectedMentions.push({
+            type,
+            displayName,
+            data
+        });
+    }
+    
+    hideEnhancedDropdown();
+}
+
+function selectSingleFile(doc) {
+    console.log('🔍 selectSingleFile called with:', doc);
+    
+    const input = document.getElementById('message-input');
+    const mention = detectAtMention(input);
+    
+    if (mention.isActive) {
+        const text = input.value;
+        const beforeAt = text.substring(0, mention.atPos);
+        const afterMention = text.substring(input.selectionStart);
+        
+        // Replace the @ mention with the selected file
+        const replacement = `@file:${doc.filename}`;
+        
+        input.value = beforeAt + replacement + ' ' + afterMention;
+        input.focus();
+        
+        // Store the mention data for message processing
+        selectedMentions.push({
+            type: 'file',
+            displayName: doc.filename,
+            data: { 
+                document_id: doc.document_id,
+                filename: doc.filename,
+                folder_path: doc.folder_path
+            }
+        });
+        
+        console.log('✅ File selected:', doc.filename);
+        console.log('📝 Updated input value:', input.value);
+        console.log('📋 Selected mentions:', selectedMentions);
+    }
+    
+    hideEnhancedDropdown();
+}
+
+async function loadProjects() {
+    try {
+        const response = await fetch('/api/projects');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.projects) {
+                availableProjects = data.projects;
+                console.log(`Loaded ${availableProjects.length} projects`);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+async function loadMeetings() {
+    try {
+        const response = await fetch('/api/meetings');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.meetings) {
+                availableMeetings = data.meetings;
+                console.log(`Loaded ${availableMeetings.length} meetings`);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading meetings:', error);
+    }
+}
+
+// Load available folders from documents
+async function loadFolders() {
+    try {
+        const response = await fetch('/api/documents');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.documents) {
+                console.log('Total documents:', data.documents.length);
+                
+                // Debug: Check what folder_path values we have
+                const docsWithFolders = data.documents.filter(doc => doc.folder_path);
+                console.log('Documents with folder_path:', docsWithFolders.length);
+                console.log('Sample folder paths:', docsWithFolders.slice(0, 5).map(doc => doc.folder_path));
+                
+                // Extract unique folder paths from documents
+                const folderPaths = [...new Set(data.documents
+                    .filter(doc => doc.folder_path && doc.folder_path.trim())
+                    .map(doc => doc.folder_path))];
+                
+                console.log('Unique folder paths found:', folderPaths);
+                
+                if (folderPaths.length === 0) {
+                    // If no folder_path, try to infer from project_id or create default folders
+                    console.log('No folder_path found, creating folders from available documents...');
+                    
+                    // Group documents by project_id if available
+                    const projectGroups = {};
+                    data.documents.forEach(doc => {
+                        const projectId = doc.project_id || 'default';
+                        if (!projectGroups[projectId]) {
+                            projectGroups[projectId] = [];
+                        }
+                        projectGroups[projectId].push(doc);
+                    });
+                    
+                    console.log('🔍 Project groups created:', projectGroups);
+                    
+                    const projectFolders = Object.keys(projectGroups).map((projectId, index) => {
+                        const folderName = projectId === 'default' ? 'Default Folder' : `Project ${index + 1}`;
+                        return {
+                            folder_path: `user_folder/project_${projectId}`,
+                            folder_name: folderName,
+                            display_name: folderName,
+                            project_id: projectId, // Store the actual project_id for matching
+                            documents: projectGroups[projectId] // Store the documents in this folder
+                        };
+                    });
+                    
+                    // Always add a "Default Folder" that contains all documents if it doesn't exist
+                    const hasDefaultFolder = projectFolders.some(f => f.display_name === 'Default Folder');
+                    if (!hasDefaultFolder) {
+                        projectFolders.unshift({
+                            folder_path: 'user_folder/project_default',
+                            folder_name: 'Default Folder',
+                            display_name: 'Default Folder',
+                            project_id: 'default',
+                            documents: data.documents // All documents
+                        });
+                    }
+                    
+                    availableFolders = projectFolders;
+                } else {
+                    availableFolders = folderPaths.map(path => {
+                        const parts = path.split('/');
+                        const folderName = parts[parts.length - 1]; // Get the last part as folder name
+                        const folderDocs = data.documents.filter(doc => doc.folder_path === path);
+                        return {
+                            folder_path: path,
+                            folder_name: folderName,
+                            display_name: folderName.replace(/^project_/, '').replace(/_/g, ' '), // Clean up display name
+                            documents: folderDocs // Store associated documents
+                        };
+                    });
+                }
+                
+                console.log(`✅ Loaded ${availableFolders.length} folders:`, availableFolders);
+                console.log('📁 Available folder display_names:', availableFolders.map(f => f.display_name));
+            } else {
+                console.log('❌ No documents data received');
+                // Create default folders even if no documents
+                availableFolders = [
+                    {
+                        folder_path: 'user_folder/project_default',
+                        folder_name: 'Default Folder',
+                        display_name: 'Default Folder'
+                    }
+                ];
+            }
+        } else {
+            console.log('❌ Failed to fetch documents:', response.status);
+            // Create default folders even if API fails
+            availableFolders = [
+                {
+                    folder_path: 'user_folder/project_default',
+                    folder_name: 'Default Folder',
+                    display_name: 'Default Folder'
+                }
+            ];
+        }
+    } catch (error) {
+        console.error('❌ Error loading folders:', error);
+        // Create default folders even if there's an error
+        availableFolders = [
+            {
+                folder_path: 'user_folder/project_default',
+                folder_name: 'Default Folder',
+                display_name: 'Default Folder'
+            }
+        ];
+    }
+    
+    // Ensure we always have at least one folder
+    if (availableFolders.length === 0) {
+        availableFolders = [
+            {
+                folder_path: 'user_folder/project_default',
+                folder_name: 'Default Folder',
+                display_name: 'Default Folder'
+            }
+        ];
+        console.log('🔧 Created default folder as fallback');
+    }
 }
 
 function setupAtMentionDetection() {
@@ -867,12 +2100,19 @@ function setupAtMentionDetection() {
     
     // Handle @ mention detection on input
     input.addEventListener('input', function(e) {
+        console.log('🔍 Input event triggered. Current value:', input.value);
+        console.log('🔍 Cursor position:', input.selectionStart);
+        
         const mention = detectAtMention(input);
         
+        console.log('🔍 detectAtMention returned:', mention);
+        
         if (mention.isActive) {
-            showDocumentDropdown(mention.searchText);
+            console.log('🔍 Mention is active, calling showEnhancedDropdown');
+            showEnhancedDropdown(mention);
         } else {
-            hideDocumentDropdown();
+            console.log('🔍 Mention is not active, hiding dropdown');
+            hideEnhancedDropdown();
         }
     });
     
@@ -881,13 +2121,13 @@ function setupAtMentionDetection() {
         if (isDocumentDropdownOpen) {
             if (e.key === 'Escape') {
                 e.preventDefault();
-                hideDocumentDropdown();
+                hideEnhancedDropdown();
             } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                navigateDocumentDropdown(e.key === 'ArrowDown' ? 1 : -1);
+                navigateEnhancedDropdown(e.key === 'ArrowDown' ? 1 : -1);
             } else if (e.key === 'Enter') {
                 e.preventDefault();
-                selectHighlightedDocument();
+                selectHighlightedItem();
             }
         }
     });
@@ -895,7 +2135,7 @@ function setupAtMentionDetection() {
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
         if (isDocumentDropdownOpen && !e.target.closest('.input-area')) {
-            hideDocumentDropdown();
+            hideEnhancedDropdown();
         }
     });
 }
@@ -919,7 +2159,31 @@ function navigateDocumentDropdown(direction) {
     items[highlightedDocumentIndex].scrollIntoView({ block: 'nearest' });
 }
 
+function navigateEnhancedDropdown(direction) {
+    const items = document.querySelectorAll('.document-item');
+    if (items.length === 0) return;
+    
+    // Remove previous highlight
+    items.forEach(item => item.classList.remove('highlighted'));
+    
+    // Update index
+    highlightedDocumentIndex += direction;
+    if (highlightedDocumentIndex < 0) highlightedDocumentIndex = items.length - 1;
+    if (highlightedDocumentIndex >= items.length) highlightedDocumentIndex = 0;
+    
+    // Add new highlight
+    items[highlightedDocumentIndex].classList.add('highlighted');
+    items[highlightedDocumentIndex].scrollIntoView({ block: 'nearest' });
+}
+
 function selectHighlightedDocument() {
+    const highlighted = document.querySelector('.document-item.highlighted');
+    if (highlighted) {
+        highlighted.click();
+    }
+}
+
+function selectHighlightedItem() {
     const highlighted = document.querySelector('.document-item.highlighted');
     if (highlighted) {
         highlighted.click();
@@ -1312,10 +2576,15 @@ function regenerateResponse() {
 }
 
 function showUploadModal() {
-    document.getElementById('upload-modal').classList.add('active');
-    
-    // Don't clear files automatically - let user decide
-    updateUploadedFilesList();
+    const modal = document.getElementById('upload-modal');
+    if (modal) {
+        loadProjects(); // Load projects when modal is shown
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Don't clear files automatically - let user decide
+        updateUploadedFilesList();
+    }
 }
 
 function removeUploadedFile(index) {
@@ -1329,6 +2598,7 @@ function removeUploadedFile(index) {
 
 function hideUploadModal() {
     document.getElementById('upload-modal').classList.remove('active');
+    document.body.style.overflow = 'auto';
     uploadedFiles = [];
     updateUploadedFilesList();
 }
@@ -1386,7 +2656,7 @@ function addFilesToUpload(files) {
 
         // Check for duplicates
         if (uploadedFiles.find(f => f.name === file.name)) {
-            showNotification(`⚠️ ${file.name}: File already added`);
+            showNotification(`${file.name}: File already added`, 'warning');
             return;
         }
 
@@ -1481,7 +2751,7 @@ async function processFiles() {
 
     const processBtn = document.getElementById('process-btn');
     processBtn.disabled = true;
-    processBtn.innerHTML = '<span>⏳</span> Processing...';
+    processBtn.innerHTML = 'Processing...';
 
     try {
         // Set all files to processing status
@@ -1493,6 +2763,12 @@ async function processFiles() {
         uploadedFiles.forEach(fileObj => {
             formData.append('files', fileObj.file);
         });
+        
+        // Add selected project if any
+        const projectSelect = document.getElementById('project-select');
+        if (projectSelect && projectSelect.value) {
+            formData.append('project_id', projectSelect.value);
+        }
 
         console.log(`Uploading ${uploadedFiles.length} files...`);
 
@@ -1504,13 +2780,26 @@ async function processFiles() {
         if (response.ok) {
             const result = await response.json();
             console.log('Upload response:', result);
+            console.log('Result structure:', {
+                success: result.success,
+                hasResults: !!result.results,
+                resultsLength: result.results ? result.results.length : 0,
+                processed: result.processed,
+                total: result.total
+            });
             
             let successCount = 0;
 
             if (result.success && result.results && Array.isArray(result.results)) {
                 // Process individual file results
+                console.log('Processing individual file results...');
                 result.results.forEach(fileResult => {
+                    console.log('Processing result for:', fileResult.filename, 'success:', fileResult.success);
+                    console.log('Available file names:', uploadedFiles.map(f => f.name));
+                    
                     const fileObj = uploadedFiles.find(f => f.name === fileResult.filename);
+                    console.log('Found matching file object:', !!fileObj);
+                    
                     if (fileObj) {
                         if (fileResult.success) {
                             fileObj.status = 'success';
@@ -1521,6 +2810,17 @@ async function processFiles() {
                             fileObj.error = fileResult.error || 'Processing failed';
                             console.log(`❌ ${fileResult.filename} failed: ${fileObj.error}`);
                         }
+                    } else {
+                        console.warn(`No matching file object found for: ${fileResult.filename}`);
+                        // Try to find by partial match
+                        const partialMatch = uploadedFiles.find(f => 
+                            f.name.includes(fileResult.filename) || fileResult.filename.includes(f.name)
+                        );
+                        if (partialMatch && fileResult.success) {
+                            partialMatch.status = 'success';
+                            successCount++;
+                            console.log(`✅ ${fileResult.filename} processed successfully (partial match)`);
+                        }
                     }
                 });
             } else if (result.success) {
@@ -1530,7 +2830,18 @@ async function processFiles() {
                     fileObj.status = 'success';
                     successCount++;
                 });
-            } else {
+            }
+            
+            // Additional fallback: Use processed count from backend
+            if (successCount === 0 && result.success && result.processed > 0) {
+                console.log(`Backend reports ${result.processed} files processed successfully, updating UI`);
+                uploadedFiles.slice(0, result.processed).forEach(fileObj => {
+                    fileObj.status = 'success';
+                    successCount++;
+                });
+            }
+            
+            if (!result.success) {
                 // Overall failure
                 console.error('Upload failed:', result.error || 'Unknown error');
                 uploadedFiles.forEach(fileObj => {
@@ -1549,18 +2860,23 @@ async function processFiles() {
             }
 
             // Show completion message
+            console.log(`Showing completion message for ${successCount} successful uploads`);
             setTimeout(() => {
                 if (successCount > 0) {
-                    showNotification(`Successfully processed ${successCount} of ${uploadedFiles.length} documents!`);
+                    const message = `Successfully processed ${successCount} of ${uploadedFiles.length} documents! Documents are now available for querying.`;
+                    console.log('Showing success notification:', message);
+                    showNotification(message);
                 } else {
-                    showNotification(`Failed to process any documents. Please check the files and try again.`);
+                    const message = `Failed to process any documents. Please check the files and try again.`;
+                    console.log('Showing error notification:', message);
+                    showNotification(message, 'error');
                 }
                 
                 // Only close modal if at least one file was successful
                 if (successCount > 0) {
                     hideUploadModal();
                 }
-            }, 1000);
+            }, 500);
 
         } else {
             // HTTP error response
@@ -1579,12 +2895,12 @@ async function processFiles() {
         });
         updateUploadedFilesList();
         
-        showNotification('Upload failed. Please check your connection and try again.');
+        showNotification('Upload failed. Please check your connection and try again.', 'error');
         
     } finally {
         // Reset button state
         processBtn.disabled = false;
-        processBtn.innerHTML = '<span>🚀</span> Process Files';
+        processBtn.innerHTML = 'Process Files';
     }
 }
 
@@ -1822,6 +3138,66 @@ function showHelp() {
         </div>
     `;
     document.body.appendChild(modal);
+}
+
+function showStats() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">System Statistics</div>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div id="stats-content" style="line-height: 1.6; text-align: center; padding: 20px;">
+                    <div style="color: #4B4D4F;">Loading statistics...</div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Load stats
+    loadSystemStats(true).then(stats => {
+        const content = document.getElementById('stats-content');
+        if (stats) {
+            content.innerHTML = `
+                <div style="display: grid; gap: 16px; text-align: left;">
+                    <div style="padding: 16px; background: #F8F9FF; border-radius: 8px;">
+                        <h3 style="color: #002677; margin: 0 0 12px 0;">📊 Document Statistics</h3>
+                        <div style="color: #4B4D4F; display: grid; gap: 8px;">
+                            <div><strong>Total Documents:</strong> ${stats.total_meetings || 0}</div>
+                            <div><strong>Total Chunks:</strong> ${stats.total_chunks || 0}</div>
+                            <div><strong>Vector Index Size:</strong> ${stats.vector_index_size || 0}</div>
+                        </div>
+                    </div>
+                    <div style="padding: 16px; background: #F8F9FF; border-radius: 8px;">
+                        <h3 style="color: #002677; margin: 0 0 12px 0;">📅 Date Range</h3>
+                        <div style="color: #4B4D4F; display: grid; gap: 8px;">
+                            <div><strong>Earliest:</strong> ${stats.date_range?.earliest || 'N/A'}</div>
+                            <div><strong>Latest:</strong> ${stats.date_range?.latest || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div style="padding: 16px; background: #F8F9FF; border-radius: 8px;">
+                        <h3 style="color: #002677; margin: 0 0 12px 0;">🤖 AI Configuration</h3>
+                        <div style="color: #4B4D4F; display: grid; gap: 8px;">
+                            <div><strong>LLM Model:</strong> ${stats.openai_integration?.llm_model || 'Unknown'}</div>
+                            <div><strong>Embedding Model:</strong> ${stats.openai_integration?.embedding_model || 'Unknown'}</div>
+                            <div><strong>Search Type:</strong> ${stats.openai_integration?.search_type || 'Unknown'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div style="color: #FF612B;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">Unable to load statistics</div>
+                    <div style="font-size: 14px;">Please try again later</div>
+                </div>
+            `;
+        }
+    });
 }
 
 function insertSampleQuery(query) {
@@ -2304,6 +3680,187 @@ function confirmDelete() {
     }
 }
 
+// Authentication Functions
+async function checkAuthenticationStatus() {
+    try {
+        const response = await fetch('/api/auth/status');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.authenticated) {
+                displayUserInfo(data.user);
+                return true;
+            }
+        }
+        // If not authenticated, redirect to login
+        window.location.href = '/login';
+        return false;
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        window.location.href = '/login';
+        return false;
+    }
+}
+
+function displayUserInfo(user) {
+    const userInfo = document.getElementById('user-info');
+    const userName = document.getElementById('user-name');
+    const userEmail = document.getElementById('user-email');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    if (userInfo && userName && userEmail) {
+        userName.textContent = user.full_name || user.username;
+        userEmail.textContent = user.email;
+        userInfo.style.display = 'flex';
+        
+        if (logoutBtn) {
+            logoutBtn.style.display = 'block';
+        }
+    }
+}
+
+async function logout() {
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            // Clear local storage
+            localStorage.clear();
+            
+            // Redirect to login
+            window.location.href = '/login';
+        } else {
+            showNotification('Logout failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        showNotification('Logout failed. Please try again.');
+    }
+}
+
+// Global project management variables  
+let selectedProjectId = null;
+
+// Project Management Functions
+async function loadProjects() {
+    try {
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+        
+        if (data.success) {
+            availableProjects = data.projects;
+            updateProjectSelect();
+        } else {
+            console.error('Failed to load projects:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+function updateProjectSelect() {
+    const projectSelect = document.getElementById('project-select');
+    if (!projectSelect) return;
+    
+    projectSelect.innerHTML = '';
+    
+    if (availableProjects.length === 0) {
+        projectSelect.innerHTML = '<option value="">No projects available</option>';
+        return;
+    }
+    
+    // Add default option
+    projectSelect.innerHTML = '<option value="">Select a project...</option>';
+    
+    // Add project options
+    availableProjects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.project_id;
+        option.textContent = project.project_name;
+        if (project.description) {
+            option.title = project.description;
+        }
+        projectSelect.appendChild(option);
+    });
+    
+    // Set selected project if any
+    if (selectedProjectId) {
+        projectSelect.value = selectedProjectId;
+    }
+}
+
+function showCreateProjectModal() {
+    const modal = document.getElementById('create-project-modal');
+    const nameInput = document.getElementById('project-name-input');
+    const descInput = document.getElementById('project-description-input');
+    
+    if (modal) {
+        // Clear inputs
+        nameInput.value = '';
+        descInput.value = '';
+        
+        modal.classList.add('active');
+        nameInput.focus();
+    }
+}
+
+function closeCreateProjectModal() {
+    const modal = document.getElementById('create-project-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+async function confirmCreateProject() {
+    const nameInput = document.getElementById('project-name-input');
+    const descInput = document.getElementById('project-description-input');
+    
+    const projectName = nameInput.value.trim();
+    const description = descInput.value.trim();
+    
+    if (!projectName) {
+        showNotification('Project name is required');
+        nameInput.focus();
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/projects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                project_name: projectName,
+                description: description
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Project created successfully');
+            closeCreateProjectModal();
+            
+            // Reload projects and select the new one
+            await loadProjects();
+            selectedProjectId = data.project_id;
+            updateProjectSelect();
+        } else {
+            showNotification('Failed to create project: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error creating project:', error);
+        showNotification('Failed to create project');
+    }
+}
+
+// Upload modal function is defined above with project loading
+
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
     // Close edit modal when clicking outside
@@ -2321,4 +3878,208 @@ document.addEventListener('click', function(event) {
             closeDeleteModal();
         }
     }
+    
+    // Close create project modal when clicking outside
+    const createProjectModal = document.getElementById('create-project-modal');
+    if (createProjectModal && createProjectModal.classList.contains('active')) {
+        if (event.target === createProjectModal) {
+            closeCreateProjectModal();
+        }
+    }
+    
+    // Close user profile modal when clicking outside
+    const userProfileModal = document.getElementById('user-profile-modal');
+    if (userProfileModal && userProfileModal.classList.contains('active')) {
+        if (event.target === userProfileModal) {
+            closeUserProfile();
+        }
+    }
+});
+
+// User Profile Functions
+function showUserProfile() {
+    const modal = document.getElementById('user-profile-modal');
+    if (modal) {
+        // Fetch and display current user data
+        updateUserProfileDisplay();
+        modal.classList.add('active');
+    }
+}
+
+function closeUserProfile() {
+    const modal = document.getElementById('user-profile-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function updateUserProfileDisplay() {
+    // Check if user is authenticated and get user data
+    fetch('/api/auth/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.authenticated && data.user) {
+                const user = data.user;
+                
+                // Update sidebar user info
+                updateElement('sidebar-user-name', user.full_name || 'UHG User');
+                updateElement('sidebar-user-email', user.email || 'user@uhg.com');
+                
+                // Update profile modal
+                updateElement('profile-full-name', user.full_name || 'UHG User');
+                updateElement('profile-username', user.username || 'uhg_user');
+                updateElement('profile-email', user.email || 'user@uhg.com');
+                updateElement('profile-user-id', user.user_id || 'USER001');
+                
+                // Update avatars with initials
+                const initials = getInitials(user.full_name || 'UHG User');
+                updateElement('user-avatar', initials);
+                updateElement('profile-avatar', initials);
+                updateElement('avatar-initials', initials);
+                
+                // Update timestamps (placeholder - would need backend support for real data)
+                updateElement('profile-last-login', formatDateTime(new Date()));
+                updateElement('profile-created-at', 'January 15, 2025');
+                
+                // Load user statistics
+                loadUserStats();
+            } else {
+                // Not authenticated, show defaults or redirect to login
+                console.log('User not authenticated');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            // Show default values in case of error
+            showDefaultUserInfo();
+        });
+}
+
+function updateElement(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function getInitials(fullName) {
+    if (!fullName) return 'UU';
+    const names = fullName.trim().split(' ');
+    if (names.length === 1) {
+        return names[0].substring(0, 2).toUpperCase();
+    }
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+}
+
+function formatDateTime(date) {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function loadUserStats() {
+    // Load documents count
+    if (availableDocuments) {
+        updateElement('stat-documents', availableDocuments.length.toString());
+    }
+    
+    // Load conversations count
+    if (savedConversations) {
+        updateElement('stat-conversations', savedConversations.length.toString());
+    }
+    
+    // Load projects count
+    if (availableProjects) {
+        updateElement('stat-projects', availableProjects.length.toString());
+    }
+}
+
+function showDefaultUserInfo() {
+    // Show default user information
+    updateElement('sidebar-user-name', 'UHG User');
+    updateElement('sidebar-user-email', 'user@uhg.com');
+    updateElement('profile-full-name', 'UHG User');
+    updateElement('profile-username', 'uhg_user');
+    updateElement('profile-email', 'user@uhg.com');
+    updateElement('profile-user-id', 'USER001');
+    
+    const initials = getInitials('UHG User');
+    updateElement('user-avatar', initials);
+    updateElement('profile-avatar', initials);
+    updateElement('avatar-initials', initials);
+}
+
+function showAccountSettings() {
+    // Placeholder for account settings functionality
+    showNotification('Account settings coming soon!');
+    closeUserProfile();
+}
+
+// Date-based query intelligence
+function detectDateQuery(message) {
+    const datePatterns = [
+        // Current periods
+        /\b(current|this)\s+(week|month|quarter|year)\b/i,
+        // Last periods  
+        /\b(last|past|previous)\s+(week|month|quarter|year)\b/i,
+        // Specific day counts
+        /\b(last|past)\s+(\d+)\s+(days?|weeks?|months?)\b/i,
+        // Recent
+        /\b(recent|recently|lately)\b/i,
+        // Summary with timeframe
+        /\b(summary|summarize|overview).*\b(week|month|quarter|year|recent)\b/i,
+        // Timeframe with summary
+        /\b(week|month|quarter|year|recent).*\b(summary|summarize|overview)\b/i
+    ];
+    
+    return datePatterns.some(pattern => pattern.test(message));
+}
+
+function addDateSuggestions(message) {
+    if (detectDateQuery(message)) {
+        console.log('🗓️ Date-based query detected:', message);
+        
+        // You could add UI hints here, such as:
+        // - Highlighting suggested date options
+        // - Showing a date picker
+        // - Displaying timeline of available documents
+        
+        // For now, we'll just log it for debugging
+        showNotification('💡 Tip: You can use specific date ranges like "last week", "current month", or "last 3 months" for more precise results!', 'info');
+    }
+}
+
+// Enhance the sendMessage function to detect date queries
+const originalSendMessage = sendMessage;
+sendMessage = function() {
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    
+    // Add date query intelligence
+    if (message) {
+        addDateSuggestions(message);
+    }
+    
+    // Call original function
+    return originalSendMessage.apply(this, arguments);
+};
+
+// Initialize user profile display when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateUserProfileDisplay();
 });

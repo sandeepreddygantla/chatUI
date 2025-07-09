@@ -2,32 +2,37 @@
 
 ## Overview
 
-A sophisticated AI-powered web application designed to process, analyze, and provide intelligent insights from meeting documents. Built with Flask backend and modern JavaScript frontend, the system leverages OpenAI's GPT-4o model and advanced vector search capabilities for comprehensive meeting document analysis.
+A sophisticated **multi-user** AI-powered web application designed to process, analyze, and provide intelligent insights from meeting documents. Built with Flask backend and modern JavaScript frontend, the system leverages OpenAI's GPT-4o model and advanced vector search capabilities for comprehensive meeting document analysis. **Version 2.0** introduces complete user authentication, project-based organization, and user-isolated data processing.
 
 ## Project Structure
 
 ```
 AI assistant old/
-├── flask_app.py              # Main Flask application server
-├── meeting_processor.py      # Core document processing and AI logic
-├── requirements.txt          # Python dependencies
+├── flask_app.py              # Mi want another change in the UI. where uhg user we see i want the current user details over there instead of showing on top of chat body.ain Flask application server with authentication
+├── meeting_processor.py      # Core document processing and AI logic (multi-user)
+├── requirements.txt          # Python dependencies (includes Flask-Login, bcrypt)
 ├── templates/
-│   └── chat.html             # Main web interface template
+│   ├── chat.html             # Main web interface template
+│   ├── login.html            # User login page
+│   └── register.html         # User registration page
 ├── static/
-│   ├── script.js             # Frontend JavaScript logic
+│   ├── script.js             # Frontend JavaScript logic (with auth)
 │   ├── styles.css            # Application styling
 │   └── icons/
 │       ├── Optum-logo.png    # UHG/Optum logo (main branding)
 │       ├── favicon.png       # Application favicon
 │       └── paperclip.svg     # File attachment icon
-├── meeting_documents/        # Storage for uploaded documents
+├── meeting_documents/        # User-specific document storage
+│   ├── user_john/            # User-specific folders
+│   ├── user_sarah/           # Organized by username
+│   └── user_admin/           # Complete data isolation
 ├── uploads/                  # Temporary file upload directory
 ├── temp/                     # Temporary processing directory
 ├── logs/
 │   └── flask_app.log         # Application logs
 ├── backups/                  # Backup storage
 ├── tiktoken_cache/           # Token caching for OpenAI
-├── meeting_documents.db      # SQLite database for metadata
+├── meeting_documents.db      # SQLite database (now with users, projects, meetings)
 └── vector_index.faiss        # FAISS vector database index
 ```
 
@@ -36,37 +41,92 @@ AI assistant old/
 ### 1. Flask Application (`flask_app.py`)
 
 **Main Features:**
+- **Multi-user authentication system** with Flask-Login
 - RESTful API endpoints for file upload, chat, and system management
+- **User session management** with secure password hashing (bcrypt)
 - Comprehensive error handling and logging
 - File validation and security measures
 - Integration with the meeting processor
+- **User-scoped data access** - complete data isolation between users
 
-**Key Endpoints:**
-- `GET /` - Main chat interface
-- `POST /api/upload` - File upload and processing
-- `POST /api/chat` - Chat message processing with optional document filtering
-- `GET /api/documents` - Retrieve list of all documents for file selection
-- `GET /api/stats` - System statistics
+**Authentication Endpoints:**
+- `GET /login` - User login page
+- `POST /login` - Process login credentials
+- `GET /register` - User registration page  
+- `POST /register` - Create new user account
+- `POST /logout` - User logout
+- `GET /api/auth/status` - Check authentication status
+
+**Main Application Endpoints (All Require Authentication):**
+- `GET /` - Main chat interface (redirects to login if not authenticated)
+- `POST /api/upload` - File upload and processing (user-scoped)
+- `POST /api/chat` - Chat message processing (user-scoped document filtering)
+- `GET /api/documents` - Retrieve user's documents only
+- `GET /api/stats` - System statistics for current user
 - `POST /api/refresh` - System refresh
 - `GET /api/test` - System health check
 
 **Security Features:**
+- **Password-based authentication** with bcrypt hashing
+- **Session management** with 24-hour timeout
+- **User data isolation** - users can only access their own data
 - File type validation (.docx, .txt, .pdf)
 - File size limits (50MB max)
 - Secure filename handling
 - Input sanitization
+- **CSRF protection** and secure session cookies
 
 ### 2. Meeting Processor (`meeting_processor.py`)
 
 **Core Architecture:**
 - **OpenAI Integration**: Uses GPT-4o for text analysis and text-embedding-3-large for vector embeddings
-- **Vector Database**: FAISS + SQLite hybrid storage for efficient similarity search
-- **Document Processing**: Supports DOCX, PDF, and TXT files
-- **Hybrid Search**: Combines semantic similarity and keyword matching
+- **Multi-User Vector Database**: FAISS + SQLite hybrid storage with user isolation
+- **Document Processing**: Supports DOCX, PDF, and TXT files with user context
+- **Hybrid Search**: Combines semantic similarity and keyword matching with user-scoped filtering
+- **Project Organization**: Documents organized by users and projects
 
 **Key Classes:**
 
-#### `MeetingDocument`
+#### `User`
+```python
+@dataclass
+class User:
+    user_id: str
+    username: str
+    email: str
+    full_name: str
+    password_hash: str
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    is_active: bool = True
+    role: str = 'user'
+```
+
+#### `Project`
+```python
+@dataclass
+class Project:
+    project_id: str
+    user_id: str
+    project_name: str
+    description: str
+    created_at: datetime
+    is_active: bool = True
+```
+
+#### `Meeting`
+```python
+@dataclass
+class Meeting:
+    meeting_id: str
+    user_id: str
+    project_id: str
+    meeting_name: str
+    meeting_date: datetime
+    created_at: datetime
+```
+
+#### `MeetingDocument` (Updated)
 ```python
 @dataclass
 class MeetingDocument:
@@ -80,8 +140,11 @@ class MeetingDocument:
     past_events: List[str]
     future_actions: List[str]
     participants: List[str]
-    chunk_count: int
-    file_size: int
+    chunk_count: int = 0
+    file_size: int = 0
+    user_id: Optional[str] = None      # NEW: User who owns this document
+    meeting_id: Optional[str] = None   # NEW: Associated meeting
+    project_id: Optional[str] = None   # NEW: Associated project
 ```
 
 #### `DocumentChunk`
@@ -98,11 +161,104 @@ class DocumentChunk:
     embedding: Optional[np.ndarray]
 ```
 
-#### `VectorDatabase`
-- FAISS index for high-performance vector similarity search
-- SQLite for metadata storage and keyword search
+#### `VectorDatabase` (Multi-User Enhanced)
+- **FAISS index** for high-performance vector similarity search
+- **SQLite for metadata storage** with complete multi-user schema
+- **User isolation** - all queries automatically filtered by user context
+- **Project/Meeting organization** - hierarchical document structure
+- **Automatic migration** from single-user to multi-user database
 - Automatic vector normalization for cosine similarity
 - Batch processing for efficient insertions
+
+**Database Schema:**
+```sql
+-- User Management
+CREATE TABLE users (
+    user_id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL, 
+    full_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    role TEXT DEFAULT 'user'
+);
+
+-- Project Organization  
+CREATE TABLE projects (
+    project_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    project_name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+);
+
+-- Meeting Management
+CREATE TABLE meetings (
+    meeting_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    project_id TEXT NOT NULL,
+    meeting_name TEXT NOT NULL,
+    meeting_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    FOREIGN KEY (project_id) REFERENCES projects (project_id)
+);
+
+-- Document Storage (Updated)
+CREATE TABLE documents (
+    document_id TEXT PRIMARY KEY,
+    filename TEXT NOT NULL,
+    date TIMESTAMP NOT NULL,
+    title TEXT,
+    content_summary TEXT,
+    main_topics TEXT,
+    past_events TEXT,
+    future_actions TEXT,
+    participants TEXT,
+    chunk_count INTEGER,
+    file_size INTEGER,
+    user_id TEXT,           -- NEW: User ownership
+    meeting_id TEXT,        -- NEW: Meeting association
+    project_id TEXT,        -- NEW: Project association
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    FOREIGN KEY (meeting_id) REFERENCES meetings (meeting_id),
+    FOREIGN KEY (project_id) REFERENCES projects (project_id)
+);
+
+-- Chunk Storage (Updated)
+CREATE TABLE chunks (
+    chunk_id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    start_char INTEGER,
+    end_char INTEGER,
+    user_id TEXT,           -- NEW: User context
+    meeting_id TEXT,        -- NEW: Meeting context
+    project_id TEXT,        -- NEW: Project context
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_id) REFERENCES documents (document_id),
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    FOREIGN KEY (meeting_id) REFERENCES meetings (meeting_id),
+    FOREIGN KEY (project_id) REFERENCES projects (project_id)
+);
+
+-- Session Management
+CREATE TABLE user_sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+);
+```
 
 #### `EnhancedMeetingDocumentProcessor`
 - Document parsing with AI-powered content extraction
@@ -190,19 +346,39 @@ pydantic             # Data validation
 
 ## Key Features
 
-### Document Processing
-1. **Multi-format Support**: DOCX, PDF, TXT files
+### User Management & Authentication
+1. **Multi-User Support**: Complete user isolation with individual accounts
+2. **Password Authentication**: Secure bcrypt hashing with session management
+3. **User Registration**: Self-service account creation with validation
+4. **Session Management**: 24-hour sessions with automatic logout
+5. **Data Isolation**: Users can only access their own documents and conversations
+6. **Future SSO Ready**: Architecture prepared for enterprise SSO integration
+
+### Document Processing (User-Scoped)
+1. **Multi-format Support**: DOCX, PDF, TXT files with user context
 2. **Intelligent Parsing**: AI-powered content extraction
 3. **Metadata Extraction**: Topics, participants, action items, dates
 4. **Chunking Strategy**: Configurable size (1000 chars) with overlap (200 chars)
 5. **Vector Embeddings**: High-dimensional semantic representations
+6. **User-Specific Storage**: Documents stored in user folders (`meeting_documents/user_john/`)
+7. **Project Organization**: Automatic assignment to user's default project
+8. **Meeting Association**: Each document linked to a specific meeting
 
-### Document Selection & Querying
+### Document Selection & Querying (Enhanced)
 1. **@ Mention System**: Type "@" to select specific documents for targeted queries
-2. **Fuzzy Search**: Real-time document filtering by filename
-3. **Multi-Document Selection**: Select multiple documents using visual pills interface
-4. **Smart Dropdown**: Automatically positions above/below input based on available space
-5. **Keyboard Navigation**: Arrow keys, Enter, and Escape support for accessibility
+2. **Automatic User Scope**: Queries without @ mentions automatically include ALL user documents
+3. **Fuzzy Search**: Real-time document filtering by filename (user's documents only)
+4. **Multi-Document Selection**: Select multiple documents using visual pills interface
+5. **Smart Dropdown**: Automatically positions above/below input based on available space
+6. **Keyboard Navigation**: Arrow keys, Enter, and Escape support for accessibility
+
+### Query Processing Behavior
+**Current Implementation:**
+- **With @ mentions**: `@filename.docx what was discussed?` → Uses only specified documents
+- **Without @ mentions**: `what were the decisions?` → Uses ALL documents for current user
+- **User Isolation**: Users never see or access other users' documents
+- **Project Context**: Documents organized by projects (default project auto-created)
+- **Meeting Context**: Each document belongs to a specific meeting
 
 ### Search & Retrieval
 1. **Hybrid Search**: Semantic + keyword matching
@@ -427,8 +603,50 @@ pydantic             # Data validation
 - Fuzzy search with filename matching
 - Event handling with proper cleanup and error handling
 
+## Version History
+
+### Version 2.0 (July 2025) - Multi-User System
+**Major Features Added:**
+- **Complete user authentication system** with registration, login, logout
+- **Multi-user architecture** with complete data isolation
+- **Project-based organization** with automatic project creation
+- **Meeting management** with document-meeting associations
+- **User-scoped querying** - automatic filtering by user context
+- **Enhanced database schema** with users, projects, meetings tables
+- **User-specific file storage** in isolated folders
+- **Session management** with secure password hashing
+- **Automatic database migration** from single-user to multi-user
+- **Professional authentication UI** with modern design
+
+**Query Behavior Changes:**
+- Queries without @ mentions now automatically include ALL user documents (not just summary keywords)
+- Complete data isolation - users never see other users' data
+- Enhanced @ mention system with user context
+
+**Breaking Changes:**
+- All API endpoints now require authentication
+- Database schema updated (automatic migration included)
+- File storage structure changed to user-specific folders
+
+### Version 1.0 (July 2025) - Single User System  
+**Original Features:**
+- Single-user meeting document AI system
+- @ mention document selection system for targeted querying
+- OpenAI GPT-4o integration for analysis
+- FAISS vector database for semantic search
+- Support for DOCX, PDF, TXT files
+- Hybrid search combining semantic and keyword matching
+- Real-time conversation management
+- Markdown response formatting
+
 ---
 
-*Last updated: July 2025 - Added @ mention document selection system for targeted querying*
+**Architecture Notes:**
+- Built for enterprise deployment with SSO extensibility
+- User data completely isolated at database and file system level
+- Ready for horizontal scaling with user-specific data partitioning
+- Designed for 100+ concurrent users with individual project management
 
-*This documentation represents the current state of the UHG Meeting Document AI System. Update this file when making significant changes to maintain accuracy and usefulness for future development and maintenance.*
+*Last updated: July 2025 - Added complete multi-user authentication and project organization system*
+
+*This documentation represents the current state of the UHG Meeting Document AI System v2.0. Update this file when making significant changes to maintain accuracy and usefulness for future development and maintenance.*

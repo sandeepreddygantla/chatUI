@@ -32,6 +32,78 @@
         "documentation": {}
     },
     {
+        "label": "redirect",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "url_for",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "session",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "LoginManager",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
+        "label": "UserMixin",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
+        "label": "login_user",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
+        "label": "logout_user",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
+        "label": "login_required",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
+        "label": "current_user",
+        "importPath": "flask_login",
+        "description": "flask_login",
+        "isExtraImport": true,
+        "detail": "flask_login",
+        "documentation": {}
+    },
+    {
         "label": "os",
         "kind": 6,
         "isExtraImport": true,
@@ -67,6 +139,14 @@
         "documentation": {}
     },
     {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -76,6 +156,14 @@
     },
     {
         "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -97,6 +185,24 @@
         "importPath": "shutil",
         "description": "shutil",
         "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "bcrypt",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
+        "documentation": {}
+    },
+    {
+        "label": "secrets",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
         "documentation": {}
     },
     {
@@ -216,6 +322,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "httpx",
         "kind": 6,
         "isExtraImport": true,
@@ -317,6 +431,24 @@
         "documentation": {}
     },
     {
+        "label": "User",
+        "kind": 6,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "class User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):\n        self.id = user_id\n        self.user_id = user_id\n        self.username = username\n        self.email = email\n        self.full_name = full_name\n    def get_id(self):\n        return self.user_id\n@login_manager.user_loader",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "load_user",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def load_user(user_id):\n    \"\"\"Load user for Flask-Login\"\"\"\n    if processor:\n        user = processor.vector_db.get_user_by_id(user_id)\n        if user:\n            return User(user.user_id, user.username, user.email, user.full_name)\n    return None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
         "label": "initialize_processor",
         "kind": 2,
         "importPath": "flask_app",
@@ -326,11 +458,47 @@
         "documentation": {}
     },
     {
+        "label": "register",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def register():\n    \"\"\"User registration\"\"\"\n    if request.method == 'GET':\n        return render_template('register.html')\n    try:\n        data = request.get_json()\n        username = data.get('username', '').strip()\n        email = data.get('email', '').strip()\n        full_name = data.get('full_name', '').strip()\n        password = data.get('password', '')",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "login",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def login():\n    \"\"\"User login\"\"\"\n    if request.method == 'GET':\n        return render_template('login.html')\n    try:\n        data = request.get_json()\n        username = data.get('username', '').strip()\n        password = data.get('password', '')\n        if not username or not password:\n            return jsonify({'success': False, 'error': 'Username and password are required'}), 400",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "logout",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def logout():\n    \"\"\"User logout\"\"\"\n    username = current_user.username\n    logout_user()\n    logger.info(f\"User logged out: {username}\")\n    return jsonify({'success': True, 'message': 'Logged out successfully'})\n@app.route('/api/auth/status')\ndef auth_status():\n    \"\"\"Check authentication status\"\"\"\n    if current_user.is_authenticated:",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "auth_status",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def auth_status():\n    \"\"\"Check authentication status\"\"\"\n    if current_user.is_authenticated:\n        return jsonify({\n            'authenticated': True,\n            'user': {\n                'user_id': current_user.user_id,\n                'username': current_user.username,\n                'email': current_user.email,\n                'full_name': current_user.full_name",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
         "label": "index",
         "kind": 2,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "def index():\n    \"\"\"Main chat interface\"\"\"\n    return render_template('chat.html')\n@app.route('/api/upload', methods=['POST'])\ndef upload_files():\n    \"\"\"Handle file uploads with detailed result tracking\"\"\"\n    try:\n        logger.info(\"Upload request received\")\n        if 'files' not in request.files:\n            logger.error(\"No files in request\")",
+        "peekOfCode": "def index():\n    \"\"\"Main chat interface\"\"\"\n    if not current_user.is_authenticated:\n        return redirect(url_for('login'))\n    return render_template('chat.html')\n@app.route('/api/upload', methods=['POST'])\n@login_required\ndef upload_files():\n    \"\"\"Handle file uploads with detailed result tracking\"\"\"\n    try:",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -348,7 +516,7 @@
         "kind": 2,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "def chat():\n    \"\"\"Handle chat messages\"\"\"\n    try:\n        data = request.get_json()\n        message = data.get('message', '').strip()\n        document_ids = data.get('document_ids', None)  # New parameter for document filtering\n        logger.info(f\"Chat request received: {message[:100]}...\")\n        if document_ids:\n            logger.info(f\"Document filter: {document_ids}\")\n        if not message:",
+        "peekOfCode": "def chat():\n    \"\"\"Handle chat messages\"\"\"\n    try:\n        data = request.get_json()\n        message = data.get('message', '').strip()\n        document_ids = data.get('document_ids', None)  # Document filtering\n        project_id = data.get('project_id', None)  # Single project filtering (legacy)\n        project_ids = data.get('project_ids', None)  # Multiple project filtering (enhanced)\n        meeting_ids = data.get('meeting_ids', None)  # Meeting filtering\n        date_filters = data.get('date_filters', None)  # Date filtering",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -357,7 +525,34 @@
         "kind": 2,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "def get_documents():\n    \"\"\"Get list of all documents for file selection\"\"\"\n    try:\n        logger.info(\"Documents request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for documents\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        documents = processor.vector_db.get_all_documents()\n        return jsonify({\n            'success': True,",
+        "peekOfCode": "def get_documents():\n    \"\"\"Get list of all documents for file selection\"\"\"\n    try:\n        logger.info(\"Documents request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for documents\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        user_id = current_user.user_id\n        documents = processor.vector_db.get_all_documents(user_id)\n        return jsonify({",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "get_projects",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def get_projects():\n    \"\"\"Get all projects for the current user\"\"\"\n    try:\n        logger.info(\"Projects request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for projects\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        user_id = current_user.user_id\n        projects = processor.vector_db.get_user_projects(user_id)\n        # Convert projects to dictionaries",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "create_project",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def create_project():\n    \"\"\"Create a new project\"\"\"\n    try:\n        data = request.get_json()\n        project_name = data.get('project_name', '').strip()\n        description = data.get('description', '').strip()\n        if not project_name:\n            return jsonify({'success': False, 'error': 'Project name is required'}), 400\n        if not processor:\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "get_meetings",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def get_meetings():\n    \"\"\"Get all meetings for the current user\"\"\"\n    try:\n        logger.info(\"Meetings request received\")\n        if not processor:\n            logger.error(\"Processor not initialized for meetings\")\n            return jsonify({'success': False, 'error': 'System not initialized'}), 500\n        user_id = current_user.user_id\n        meetings = processor.vector_db.get_user_meetings(user_id)\n        # Convert meetings to dictionaries",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -402,7 +597,7 @@
         "kind": 5,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "app = Flask(__name__, \n           static_folder='static',  # Explicitly set static folder\n           static_url_path='/static',  # Set static URL path\n           template_folder='templates')  # Set template folder\napp.config['SECRET_KEY'] = 'uhg-meeting-ai-secret-key'\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():",
+        "peekOfCode": "app = Flask(__name__, \n           static_folder='static',  # Explicitly set static folder\n           static_url_path='/static',  # Set static URL path\n           template_folder='templates')  # Set template folder\napp.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\napp.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session\n# Configure Flask-Login\nlogin_manager = LoginManager()",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -411,7 +606,7 @@
         "kind": 5,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "app.config['SECRET_KEY'] = 'uhg-meeting-ai-secret-key'\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")",
+        "peekOfCode": "app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))\napp.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\napp.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session\n# Configure Flask-Login\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\nlogin_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -420,7 +615,7 @@
         "kind": 5,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "app.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)",
+        "peekOfCode": "app.config['UPLOAD_FOLDER'] = 'uploads'\napp.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\napp.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session\n# Configure Flask-Login\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\nlogin_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -429,7 +624,52 @@
         "kind": 5,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\n# Global processor instance\nprocessor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)\n        logger.info(\"Processor initialized successfully\")",
+        "peekOfCode": "app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size\napp.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session\n# Configure Flask-Login\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\nlogin_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "app.config['PERMANENT_SESSION_LIFETIME']",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session\n# Configure Flask-Login\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\nlogin_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None\n# User class for Flask-Login",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "login_manager",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "login_manager = LoginManager()\nlogin_manager.init_app(app)\nlogin_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None\n# User class for Flask-Login\nclass User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "login_manager.login_view",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "login_manager.login_view = 'login'\nlogin_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None\n# User class for Flask-Login\nclass User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):\n        self.id = user_id\n        self.user_id = user_id",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "login_manager.login_message",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "login_manager.login_message = 'Please log in to access this page.'\nlogin_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None\n# User class for Flask-Login\nclass User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):\n        self.id = user_id\n        self.user_id = user_id\n        self.username = username",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
+        "label": "login_manager.login_message_category",
+        "kind": 5,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "login_manager.login_message_category = 'info'\n# Global processor instance\nprocessor = None\n# User class for Flask-Login\nclass User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):\n        self.id = user_id\n        self.user_id = user_id\n        self.username = username\n        self.email = email",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -438,7 +678,7 @@
         "kind": 5,
         "importPath": "flask_app",
         "description": "flask_app",
-        "peekOfCode": "processor = None\ndef initialize_processor():\n    \"\"\"Initialize the document processor\"\"\"\n    global processor\n    try:\n        logger.info(\"Initializing Enhanced Meeting Document Processor...\")\n        processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)\n        logger.info(\"Processor initialized successfully\")\n        return True\n    except Exception as e:",
+        "peekOfCode": "processor = None\n# User class for Flask-Login\nclass User(UserMixin):\n    def __init__(self, user_id, username, email, full_name):\n        self.id = user_id\n        self.user_id = user_id\n        self.username = username\n        self.email = email\n        self.full_name = full_name\n    def get_id(self):",
         "detail": "flask_app",
         "documentation": {}
     },
@@ -448,6 +688,33 @@
         "importPath": "meeting_processor",
         "description": "meeting_processor",
         "peekOfCode": "class DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int\n    content: str\n    start_char: int\n    end_char: int\n    embedding: Optional[np.ndarray] = None",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "User",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class User:\n    \"\"\"Structure to hold user information\"\"\"\n    user_id: str\n    username: str\n    email: str\n    full_name: str\n    password_hash: str\n    created_at: datetime\n    last_login: Optional[datetime] = None\n    is_active: bool = True",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "Project",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class Project:\n    \"\"\"Structure to hold project information\"\"\"\n    project_id: str\n    user_id: str\n    project_name: str\n    description: str\n    created_at: datetime\n    is_active: bool = True\n@dataclass\nclass Meeting:",
+        "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "Meeting",
+        "kind": 6,
+        "importPath": "meeting_processor",
+        "description": "meeting_processor",
+        "peekOfCode": "class Meeting:\n    \"\"\"Structure to hold meeting information\"\"\"\n    meeting_id: str\n    user_id: str\n    project_id: str\n    meeting_name: str\n    meeting_date: datetime\n    created_at: datetime\n@dataclass\nclass MeetingDocument:",
         "detail": "meeting_processor",
         "documentation": {}
     },
@@ -584,6 +851,78 @@
         "description": "meeting_processor",
         "peekOfCode": "llm = get_llm(access_token)\n@dataclass\nclass DocumentChunk:\n    \"\"\"Structure to hold document chunk information\"\"\"\n    chunk_id: str\n    document_id: str\n    filename: str\n    chunk_index: int\n    content: str\n    start_char: int",
         "detail": "meeting_processor",
+        "documentation": {}
+    },
+    {
+        "label": "sanitize_project_name",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def sanitize_project_name(project_name):\n    \"\"\"Sanitize project name for folder creation\"\"\"\n    if not project_name:\n        return \"Default_Project\"\n    # Replace spaces and special characters\n    sanitized = project_name.replace(\" \", \"_\").replace(\"/\", \"_\").replace(\"\\\\\", \"_\")\n    sanitized = \"\".join(c for c in sanitized if c.isalnum() or c in (\"_\", \"-\"))\n    return sanitized if sanitized else \"Default_Project\"\ndef get_project_name_by_id(cursor, project_id):\n    \"\"\"Get project name by project ID\"\"\"",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "get_project_name_by_id",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def get_project_name_by_id(cursor, project_id):\n    \"\"\"Get project name by project ID\"\"\"\n    cursor.execute(\"SELECT project_name FROM projects WHERE project_id = ?\", (project_id,))\n    result = cursor.fetchone()\n    return result[0] if result else \"Default Project\"\ndef migrate_existing_files():\n    \"\"\"Migrate existing files to project-folder structure\"\"\"\n    db_path = \"meeting_documents.db\"\n    if not os.path.exists(db_path):\n        logger.error(f\"Database file {db_path} not found\")",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_existing_files",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def migrate_existing_files():\n    \"\"\"Migrate existing files to project-folder structure\"\"\"\n    db_path = \"meeting_documents.db\"\n    if not os.path.exists(db_path):\n        logger.error(f\"Database file {db_path} not found\")\n        return False\n    # Connect to database\n    conn = sqlite3.connect(db_path)\n    cursor = conn.cursor()\n    try:",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_empty_folders",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def cleanup_empty_folders():\n    \"\"\"Clean up empty user folders after migration\"\"\"\n    meeting_docs_path = Path(\"meeting_documents\")\n    if not meeting_docs_path.exists():\n        return\n    # Find all user folders\n    for user_folder in meeting_docs_path.glob(\"user_*\"):\n        if user_folder.is_dir():\n            try:\n                # Check if folder is empty (no files, only project folders)",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "verify_migration",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def verify_migration():\n    \"\"\"Verify that migration was successful\"\"\"\n    db_path = \"meeting_documents.db\"\n    if not os.path.exists(db_path):\n        logger.error(f\"Database file {db_path} not found\")\n        return False\n    conn = sqlite3.connect(db_path)\n    cursor = conn.cursor()\n    try:\n        # Check for documents without folder_path",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def main():\n    \"\"\"Main migration function\"\"\"\n    logger.info(\"Starting migration to project-folder structure\")\n    logger.info(\"=\" * 60)\n    # Backup database before migration\n    backup_db()\n    # Run migration\n    if migrate_existing_files():\n        logger.info(\"Migration completed successfully\")\n        # Verify migration",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "backup_db",
+        "kind": 2,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "def backup_db():\n    \"\"\"Create a backup of the database before migration\"\"\"\n    db_path = \"meeting_documents.db\"\n    if os.path.exists(db_path):\n        backup_path = f\"meeting_documents_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db\"\n        shutil.copy2(db_path, backup_path)\n        logger.info(f\"Database backed up to {backup_path}\")\nif __name__ == \"__main__\":\n    main()",
+        "detail": "migrate_to_project_folders",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "migrate_to_project_folders",
+        "description": "migrate_to_project_folders",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef sanitize_project_name(project_name):\n    \"\"\"Sanitize project name for folder creation\"\"\"\n    if not project_name:\n        return \"Default_Project\"\n    # Replace spaces and special characters\n    sanitized = project_name.replace(\" \", \"_\").replace(\"/\", \"_\").replace(\"\\\\\", \"_\")\n    sanitized = \"\".join(c for c in sanitized if c.isalnum() or c in (\"_\", \"-\"))\n    return sanitized if sanitized else \"Default_Project\"\ndef get_project_name_by_id(cursor, project_id):",
+        "detail": "migrate_to_project_folders",
         "documentation": {}
     }
 ]
