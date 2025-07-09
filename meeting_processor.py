@@ -1949,9 +1949,9 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
         return False
 
     def _generate_comprehensive_project_summary(self, query: str, user_id: str, project_id: str = None, include_context: bool = False) -> Union[str, Tuple[str, str]]:
-        """Generate comprehensive project summary that processes ALL files in a project"""
+        """Generate flexible comprehensive answer that processes ALL files based on user query"""
         try:
-            logger.info(f"Generating comprehensive project summary for user {user_id}, project {project_id}")
+            logger.info(f"Generating user-centric comprehensive answer for user {user_id}, project {project_id}")
             
             # Get all documents in the project
             if project_id:
@@ -1960,281 +1960,178 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
                 documents = self.vector_db.get_all_documents(user_id)
             
             if not documents:
-                error_msg = "No documents found in the project to summarize."
+                error_msg = "No documents found in the project to analyze."
                 return (error_msg, "") if include_context else error_msg
             
             total_files = len(documents)
-            logger.info(f"Found {total_files} files to process for comprehensive summary")
+            logger.info(f"Found {total_files} files to process for user query: '{query}'")
             
-            # Determine processing strategy based on file count
+            # Use single flexible processing approach
+            return self._generate_flexible_comprehensive_answer(documents, query, total_files, include_context)
+                
+        except Exception as e:
+            logger.error(f"Error generating comprehensive answer: {e}")
+            error_msg = f"I encountered an error processing your question across all project files: {str(e)}"
+            return (error_msg, "") if include_context else error_msg
+
+    def _generate_flexible_comprehensive_answer(self, documents: List[Any], query: str, total_files: int, include_context: bool) -> Union[str, Tuple[str, str]]:
+        """Single flexible function that processes ALL files based on user query intent"""
+        try:
+            logger.info(f"Processing {total_files} files with flexible approach for query: '{query}'")
+            
+            # Smart content selection based on file count
             if total_files <= 15:
-                # Tier 1: Process all files individually
-                return self._process_all_files_individually(documents, query, include_context)
+                # Small projects: Use detailed content from all files
+                content_chunks = self._get_detailed_content_from_all_files(documents)
+                processing_note = f"Analyzed all {total_files} files individually"
             elif total_files <= 50:
-                # Tier 2: Batch processing with smart sampling
-                return self._process_files_with_batching(documents, query, include_context)
+                # Medium projects: Use smart sampling + summaries
+                content_chunks = self._get_smart_sampled_content(documents, query)
+                processing_note = f"Analyzed all {total_files} files using smart sampling"
             else:
-                # Tier 3: Hierarchical summarization for 50+ files
-                return self._process_files_hierarchically(documents, query, include_context)
-                
-        except Exception as e:
-            logger.error(f"Error generating comprehensive project summary: {e}")
-            error_msg = f"I encountered an error generating the comprehensive project summary: {str(e)}"
-            return (error_msg, "") if include_context else error_msg
-
-    def _process_all_files_individually(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
-        """Process all files individually for projects with <= 15 files"""
-        try:
-            logger.info(f"Processing {len(documents)} files individually")
+                # Large projects: Use summarized content + key excerpts
+                content_chunks = self._get_summarized_content_with_excerpts(documents, query)
+                processing_note = f"Analyzed all {total_files} files using intelligent summarization"
             
-            # Get comprehensive content from all documents
-            all_summaries = []
-            context_parts = []
+            if not content_chunks:
+                error_msg = "Unable to extract relevant content from the documents."
+                return (error_msg, "") if include_context else error_msg
             
-            for doc in documents:
-                # Get document metadata
-                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
-                if doc_info:
-                    file_summary = f"**{doc_info['filename']}** ({doc_info['date'][:10]}): {doc_info['content_summary']}"
-                    all_summaries.append(file_summary)
-                    
-                    # Add key content for context
-                    context_parts.append(f"Document: {doc_info['filename']}")
-                    context_parts.append(f"Date: {doc_info['date'][:10]}")
-                    context_parts.append(f"Summary: {doc_info['content_summary']}")
-                    context_parts.append("="*50)
+            # Build context for transparency
+            context = f"Processing Strategy: {processing_note}\n" + "="*60 + "\n"
+            context += "\n".join([f"File {i+1}: {chunk['filename']}" for i, chunk in enumerate(content_chunks[:10])])
+            if len(content_chunks) > 10:
+                context += f"\n... and {len(content_chunks) - 10} more files"
             
-            context = "\n".join(context_parts)
-            
-            # Generate comprehensive summary
-            summary_prompt = f"""
-You are an expert project analyst. Based on the following {len(documents)} meeting documents, provide a comprehensive project summary.
+            # Generate flexible, user-centric response
+            flexible_prompt = f"""
+You are an expert meeting document analyst. Based on the provided content from {total_files} meeting documents, answer the user's question naturally and comprehensively.
 
-Document Summaries:
-{chr(10).join(all_summaries)}
+User Question: {query}
 
-User Query: {query}
+Document Content:
+{self._format_content_for_analysis(content_chunks)}
 
-Please provide a comprehensive summary that includes:
-1. **Project Overview**: Overall theme and purpose across all meetings
-2. **Key Decisions**: Major decisions made across all {len(documents)} files
-3. **Progress Timeline**: Chronological progression of events and milestones
-4. **Participants & Roles**: All participants mentioned and their key contributions
-5. **Action Items**: All future actions and assignments mentioned
-6. **Challenges & Solutions**: Problems identified and solutions proposed
-7. **File Summary**: Brief mention of what each file covered (all {len(documents)} files)
+Instructions:
+- Answer the user's question directly and naturally
+- Use information from ALL {total_files} files where relevant
+- If the user asked for a summary, provide a natural overview
+- If they asked about specific topics, focus on those topics
+- If they asked about people, focus on participants and roles
+- Include specific details, dates, and document references when helpful
+- Don't force artificial structure - respond naturally to what was asked
+- Be comprehensive but focused on answering the actual question
 
-This summary covers ALL {len(documents)} files in the project. Be thorough and comprehensive.
+Provide a thorough answer based on all {total_files} files:
 """
 
             messages = [
-                SystemMessage(content=f"You are a comprehensive project analyst. Provide thorough summaries covering all {len(documents)} files in the project."),
-                HumanMessage(content=summary_prompt)
+                SystemMessage(content=f"You are an expert analyst with access to {total_files} meeting documents. Answer user questions naturally and comprehensively based on all available information."),
+                HumanMessage(content=flexible_prompt)
             ]
             
             response = self.llm.invoke(messages)
             
-            # Add file count information
-            final_response = f"**Comprehensive Project Summary** (Processed {len(documents)} files)\n\n{response.content}"
+            # Add transparency note
+            final_response = f"*Based on analysis of all {total_files} files in your project*\n\n{response.content}"
             
             return (final_response, context) if include_context else final_response
             
         except Exception as e:
-            logger.error(f"Error in individual file processing: {e}")
-            error_msg = f"Error processing {len(documents)} files individually: {str(e)}"
+            logger.error(f"Error in flexible comprehensive processing: {e}")
+            error_msg = f"Error analyzing {total_files} files: {str(e)}"
             return (error_msg, "") if include_context else error_msg
 
-    def _process_files_with_batching(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
-        """Process files with smart batching for projects with 16-50 files"""
-        try:
-            logger.info(f"Processing {len(documents)} files with batching strategy")
-            
-            # Process documents in batches of 10
-            batch_size = 10
-            batch_summaries = []
-            context_parts = []
-            
-            for i in range(0, len(documents), batch_size):
-                batch = documents[i:i + batch_size]
-                batch_summary = self._process_document_batch(batch, f"Batch {i//batch_size + 1}")
-                batch_summaries.append(batch_summary)
-                
-                # Add to context
-                context_parts.append(f"Batch {i//batch_size + 1} ({len(batch)} files)")
-                context_parts.append(batch_summary)
-                context_parts.append("="*60)
-            
-            context = "\n".join(context_parts)
-            
-            # Generate final comprehensive summary from batch summaries
-            final_summary_prompt = f"""
-You are a senior project analyst. Based on the following batch summaries from {len(documents)} files, create a comprehensive project summary.
+    def _get_detailed_content_from_all_files(self, documents: List[Any]) -> List[Dict[str, str]]:
+        """Get detailed content from all files for small projects (≤15 files)"""
+        content_chunks = []
+        for doc in documents:
+            doc_info = self.vector_db.get_document_metadata(doc['document_id'])
+            if doc_info:
+                content_chunks.append({
+                    'filename': doc_info['filename'],
+                    'date': doc_info['date'][:10],
+                    'content': doc_info['content_summary'],
+                    'topics': ', '.join(doc_info['main_topics'][:3]),  # Top 3 topics
+                    'participants': ', '.join(doc_info['participants'][:5])  # Top 5 participants
+                })
+        return content_chunks
 
-Batch Summaries:
-{chr(10).join(batch_summaries)}
+    def _get_smart_sampled_content(self, documents: List[Any], query: str) -> List[Dict[str, str]]:
+        """Get smart sampled content for medium projects (16-50 files)"""
+        # For medium projects, get summaries from all files but prioritize based on relevance
+        all_content = self._get_detailed_content_from_all_files(documents)
+        
+        # Simple relevance scoring based on query keywords
+        query_words = set(query.lower().split())
+        
+        for chunk in all_content:
+            # Score based on how many query words appear in content
+            content_words = set(chunk['content'].lower().split())
+            chunk['relevance_score'] = len(query_words.intersection(content_words))
+        
+        # Sort by relevance but keep all files
+        all_content.sort(key=lambda x: x['relevance_score'], reverse=True)
+        return all_content
 
-User Query: {query}
+    def _get_summarized_content_with_excerpts(self, documents: List[Any], query: str) -> List[Dict[str, str]]:
+        """Get summarized content with key excerpts for large projects (50+ files)"""
+        # For large projects, group by time periods and get summaries
+        content_chunks = []
+        
+        # Group documents by month for better organization
+        monthly_groups = {}
+        for doc in documents:
+            doc_info = self.vector_db.get_document_metadata(doc['document_id'])
+            if doc_info:
+                try:
+                    import datetime
+                    doc_date = datetime.datetime.fromisoformat(doc_info['date'].replace('Z', '+00:00'))
+                    month_key = doc_date.strftime('%Y-%m')
+                    if month_key not in monthly_groups:
+                        monthly_groups[month_key] = []
+                    monthly_groups[month_key].append(doc_info)
+                except:
+                    if 'unknown' not in monthly_groups:
+                        monthly_groups['unknown'] = []
+                    monthly_groups['unknown'].append(doc_info)
+        
+        # Create summaries for each time period
+        for period, docs in monthly_groups.items():
+            period_summary = f"Period {period} ({len(docs)} files): "
+            topics = set()
+            participants = set()
+            
+            for doc in docs:
+                topics.update(doc['main_topics'][:2])  # Top 2 topics per doc
+                participants.update(doc['participants'][:3])  # Top 3 participants per doc
+            
+            period_summary += f"Main topics: {', '.join(list(topics)[:5])}. "
+            period_summary += f"Key participants: {', '.join(list(participants)[:8])}."
+            
+            content_chunks.append({
+                'filename': f"{len(docs)} files from {period}",
+                'date': period,
+                'content': period_summary,
+                'topics': ', '.join(list(topics)[:5]),
+                'participants': ', '.join(list(participants)[:8])
+            })
+        
+        return content_chunks
 
-Provide a comprehensive summary that consolidates all {len(documents)} files into:
-1. **Executive Summary**: High-level overview of the entire project
-2. **Key Achievements**: Major accomplishments across all files
-3. **Decision Timeline**: Chronological view of key decisions
-4. **Stakeholder Analysis**: All participants and their roles
-5. **Action Items**: Consolidated future actions from all files
-6. **Risk & Challenges**: Issues identified across all meetings
-7. **Recommendations**: Strategic recommendations based on all {len(documents)} files
-
-This analysis covers ALL {len(documents)} files in the project.
-"""
-
-            messages = [
-                SystemMessage(content=f"You are a senior project analyst specializing in comprehensive project summaries from {len(documents)} files."),
-                HumanMessage(content=final_summary_prompt)
-            ]
-            
-            response = self.llm.invoke(messages)
-            
-            # Add processing information
-            final_response = f"**Comprehensive Project Summary** (Processed {len(documents)} files in {len(batch_summaries)} batches)\n\n{response.content}"
-            
-            return (final_response, context) if include_context else final_response
-            
-        except Exception as e:
-            logger.error(f"Error in batch processing: {e}")
-            error_msg = f"Error processing {len(documents)} files with batching: {str(e)}"
-            return (error_msg, "") if include_context else error_msg
-
-    def _process_files_hierarchically(self, documents: List[Any], query: str, include_context: bool) -> Union[str, Tuple[str, str]]:
-        """Process files hierarchically for projects with 50+ files"""
-        try:
-            logger.info(f"Processing {len(documents)} files hierarchically")
-            
-            # Group documents by date/project phases
-            grouped_docs = self._group_documents_by_timeframe(documents)
-            
-            # Process each group
-            group_summaries = []
-            context_parts = []
-            
-            for group_name, group_docs in grouped_docs.items():
-                logger.info(f"Processing group '{group_name}' with {len(group_docs)} files")
-                group_summary = self._process_document_group(group_docs, group_name)
-                group_summaries.append(f"**{group_name}** ({len(group_docs)} files): {group_summary}")
-                
-                # Add to context
-                context_parts.append(f"Group: {group_name} ({len(group_docs)} files)")
-                context_parts.append(group_summary)
-                context_parts.append("="*60)
-            
-            context = "\n".join(context_parts)
-            
-            # Generate executive summary from group summaries
-            executive_summary_prompt = f"""
-You are a C-level executive analyst. Based on the following group summaries from {len(documents)} files, create an executive-level comprehensive project summary.
-
-Group Summaries:
-{chr(10).join(group_summaries)}
-
-User Query: {query}
-
-Provide an executive summary that synthesizes all {len(documents)} files into:
-1. **Strategic Overview**: High-level project direction and goals
-2. **Key Milestones**: Major achievements and turning points
-3. **Strategic Decisions**: Critical decisions that shaped the project
-4. **Leadership & Teams**: Key stakeholders and their strategic roles
-5. **Future Roadmap**: Strategic action items and next steps
-6. **Risk Assessment**: Strategic risks and mitigation strategies
-7. **Business Impact**: Overall project impact and value delivered
-
-This executive analysis is based on ALL {len(documents)} files across {len(grouped_docs)} project phases.
-"""
-
-            messages = [
-                SystemMessage(content=f"You are a C-level executive analyst providing strategic insights from {len(documents)} files."),
-                HumanMessage(content=executive_summary_prompt)
-            ]
-            
-            response = self.llm.invoke(messages)
-            
-            # Add processing information
-            final_response = f"**Executive Project Summary** (Processed {len(documents)} files across {len(grouped_docs)} phases)\n\n{response.content}"
-            
-            return (final_response, context) if include_context else final_response
-            
-        except Exception as e:
-            logger.error(f"Error in hierarchical processing: {e}")
-            error_msg = f"Error processing {len(documents)} files hierarchically: {str(e)}"
-            return (error_msg, "") if include_context else error_msg
-
-    def _process_document_batch(self, documents: List[Any], batch_name: str) -> str:
-        """Process a batch of documents and return summary"""
-        try:
-            doc_summaries = []
-            for doc in documents:
-                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
-                if doc_info:
-                    doc_summaries.append(f"- {doc_info['filename']}: {doc_info['content_summary']}")
-            
-            batch_prompt = f"""
-Summarize this batch of {len(documents)} meeting documents:
-
-{chr(10).join(doc_summaries)}
-
-Provide a consolidated summary focusing on:
-- Key themes and topics
-- Major decisions and outcomes
-- Important participants
-- Action items and next steps
-
-Keep it concise but comprehensive.
-"""
-            
-            messages = [
-                SystemMessage(content="You are a meeting summarization expert. Provide concise but comprehensive batch summaries."),
-                HumanMessage(content=batch_prompt)
-            ]
-            
-            response = self.llm.invoke(messages)
-            return response.content
-            
-        except Exception as e:
-            logger.error(f"Error processing batch {batch_name}: {e}")
-            return f"Error processing batch {batch_name}: {str(e)}"
-
-    def _process_document_group(self, documents: List[Any], group_name: str) -> str:
-        """Process a group of documents and return summary"""
-        try:
-            # Use similar logic to batch processing but with group-specific context
-            return self._process_document_batch(documents, group_name)
-            
-        except Exception as e:
-            logger.error(f"Error processing group {group_name}: {e}")
-            return f"Error processing group {group_name}: {str(e)}"
-
-    def _group_documents_by_timeframe(self, documents: List[Any]) -> Dict[str, List[Any]]:
-        """Group documents by timeframe for hierarchical processing"""
-        try:
-            from collections import defaultdict
-            import datetime
-            
-            groups = defaultdict(list)
-            
-            for doc in documents:
-                doc_info = self.vector_db.get_document_metadata(doc['document_id'])
-                if doc_info:
-                    # Parse date and group by month/quarter
-                    try:
-                        doc_date = datetime.datetime.fromisoformat(doc_info['date'].replace('Z', '+00:00'))
-                        month_year = doc_date.strftime('%Y-%m')
-                        groups[f"Period {month_year}"].append(doc)
-                    except:
-                        groups["Undated"].append(doc)
-            
-            return dict(groups)
-            
-        except Exception as e:
-            logger.error(f"Error grouping documents: {e}")
-            return {"All Documents": documents}
+    def _format_content_for_analysis(self, content_chunks: List[Dict[str, str]]) -> str:
+        """Format content chunks for AI analysis"""
+        formatted_content = []
+        
+        for i, chunk in enumerate(content_chunks, 1):
+            formatted_content.append(f"""
+Document {i}: {chunk['filename']} ({chunk['date']})
+Content: {chunk['content']}
+Key Topics: {chunk['topics']}
+Participants: {chunk['participants']}
+{'='*60}""")
+        
+        return "\n".join(formatted_content)
 
 def main():
     """Main function for Meeting Document AI System with OpenAI"""

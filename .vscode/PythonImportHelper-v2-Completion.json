@@ -960,5 +960,50 @@
         "peekOfCode": "def main():\n    \"\"\"Run all tests\"\"\"\n    print(\"🚀 Testing Comprehensive Project Summary Implementation\")\n    print(\"=\" * 70)\n    test1 = test_detect_project_summary_query()\n    test2 = test_file_processing_strategy()\n    test3 = test_comprehensive_summary_features()\n    print(\"\\n\" + \"=\" * 70)\n    if test1 and test2 and test3:\n        print(\"🎉 ALL TESTS PASSED! Implementation is ready for use.\")",
         "detail": "test_comprehensive_summary",
         "documentation": {}
+    },
+    {
+        "label": "test_user_centric_queries",
+        "kind": 2,
+        "importPath": "test_flexible_summary",
+        "description": "test_flexible_summary",
+        "peekOfCode": "def test_user_centric_queries():\n    \"\"\"Test that different user queries get appropriately focused responses\"\"\"\n    # Test the flexible prompt generation logic\n    def generate_flexible_prompt(query, total_files, content):\n        \"\"\"Simulate the flexible prompt generation\"\"\"\n        return f\"\"\"\nYou are an expert meeting document analyst. Based on the provided content from {total_files} meeting documents, answer the user's question naturally and comprehensively.\nUser Question: {query}\nDocument Content:\n{content}",
+        "detail": "test_flexible_summary",
+        "documentation": {}
+    },
+    {
+        "label": "test_processing_strategies",
+        "kind": 2,
+        "importPath": "test_flexible_summary",
+        "description": "test_flexible_summary",
+        "peekOfCode": "def test_processing_strategies():\n    \"\"\"Test the different processing strategies based on file count\"\"\"\n    def get_processing_strategy(file_count):\n        \"\"\"Simulate the processing strategy selection\"\"\"\n        if file_count <= 15:\n            return \"detailed_individual\", \"Use detailed content from all files\"\n        elif file_count <= 50:\n            return \"smart_sampling\", \"Use smart sampling + summaries from all files\"\n        else:\n            return \"summarized_excerpts\", \"Use summarized content + key excerpts from all files\"",
+        "detail": "test_flexible_summary",
+        "documentation": {}
+    },
+    {
+        "label": "test_content_selection_methods",
+        "kind": 2,
+        "importPath": "test_flexible_summary",
+        "description": "test_flexible_summary",
+        "peekOfCode": "def test_content_selection_methods():\n    \"\"\"Test the different content selection methods\"\"\"\n    print(\"\\n\\nTesting Content Selection Methods:\")\n    print(\"=\" * 60)\n    methods = [\n        {\n            \"name\": \"_get_detailed_content_from_all_files\",\n            \"use_case\": \"Small projects (≤15 files)\",\n            \"approach\": \"Full summaries + topics + participants from each file\",\n            \"benefit\": \"Maximum detail and context\"",
+        "detail": "test_flexible_summary",
+        "documentation": {}
+    },
+    {
+        "label": "compare_old_vs_new",
+        "kind": 2,
+        "importPath": "test_flexible_summary",
+        "description": "test_flexible_summary",
+        "peekOfCode": "def compare_old_vs_new():\n    \"\"\"Compare old rigid approach vs new flexible approach\"\"\"\n    print(\"\\n\\nComparison: Old vs New Approach:\")\n    print(\"=\" * 60)\n    comparison = [\n        {\n            \"aspect\": \"User Query\",\n            \"old\": \"Forces predefined 7-section response\",\n            \"new\": \"Responds naturally to actual question\"\n        },",
+        "detail": "test_flexible_summary",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "test_flexible_summary",
+        "description": "test_flexible_summary",
+        "peekOfCode": "def main():\n    \"\"\"Run all tests\"\"\"\n    print(\"🚀 Testing Simplified, User-Centric Comprehensive Summary\")\n    print(\"=\" * 70)\n    test1 = test_user_centric_queries()\n    test2 = test_processing_strategies()\n    test3 = test_content_selection_methods()\n    test4 = compare_old_vs_new()\n    print(\"\\n\" + \"=\" * 70)\n    if test1 and test2 and test3 and test4:",
+        "detail": "test_flexible_summary",
+        "documentation": {}
     }
 ]

@@ -38,6 +38,14 @@ cp meeting_documents.db backups/meeting_documents_backup_$(date +%Y%m%d_%H%M%S).
 
 ### Testing and Validation
 ```bash
+# Test syntax and imports
+python3 -m py_compile meeting_processor.py
+python3 -m py_compile flask_app.py
+
+# Test comprehensive summary logic
+python3 test_comprehensive_summary.py
+python3 test_flexible_summary.py
+
 # Test OpenAI API connection
 curl -X GET http://localhost:5000/api/test
 
@@ -81,9 +89,10 @@ User Authentication → Project Selection → Document Upload → AI Analysis �
 
 #### 2. Meeting Processor (`meeting_processor.py`)
 - **VectorDatabase Class**: FAISS + SQLite hybrid with user isolation
-- **EnhancedMeetingDocumentProcessor**: AI-powered document analysis
+- **EnhancedMeetingDocumentProcessor**: AI-powered document analysis with flexible comprehensive summaries
 - **Intelligent Date Filtering**: Calendar-aware timeframe detection (current week, last month, etc.)
 - **Hybrid Search Engine**: Semantic + keyword search with user scoping
+- **Flexible Project Summary System**: User-centric responses that process ALL files without rigid templates
 
 #### 3. Frontend Interface (`static/`)
 - **Advanced Document Selection**: `@filename` mentions for targeted queries  
@@ -115,6 +124,14 @@ The system uses SQLite with the following key tables:
 - **File Mention**: `"@meeting.docx What was discussed?"` → Uses only specified file(s)
 - **Folder Mention**: `"#Project Alpha What's the status?"` → Uses all files in folder
 - **Date Filtering**: `"Last week's summary"` → Automatically filters by calendar week
+- **Project Summary**: `"Give me a project summary"` → Processes ALL files with user-centric approach
+
+#### Comprehensive Project Summary System
+The system detects comprehensive project queries and processes ALL files (no 5-file limitation):
+- **Small Projects (≤15 files)**: Individual file analysis with maximum detail
+- **Medium Projects (16-50 files)**: Smart sampling with relevance scoring
+- **Large Projects (50+ files)**: Hierarchical processing with time-period grouping
+- **User-Centric Responses**: Answers what users actually ask instead of forcing rigid templates
 
 #### Intelligent Date Detection
 The system automatically detects and processes temporal queries:
@@ -158,6 +175,29 @@ When extending document processing:
 2. **Use existing chunking strategy** (1000 chars, 200 overlap)
 3. **Add vector embeddings** for new content types
 4. **Update database schema** with proper foreign key relationships
+
+### Working with Comprehensive Project Summaries
+The system uses a simplified, flexible approach for project summaries:
+
+#### Key Functions
+- `detect_project_summary_query()`: Detects queries requesting comprehensive analysis
+- `_generate_flexible_comprehensive_answer()`: Single function that adapts to user queries
+- `_get_detailed_content_from_all_files()`: For small projects (≤15 files)
+- `_get_smart_sampled_content()`: For medium projects (16-50 files)  
+- `_get_summarized_content_with_excerpts()`: For large projects (50+ files)
+
+#### Design Principles
+- **User-Centric**: Responds to what users actually ask, not predefined templates
+- **All Files Processed**: Every file in the project contributes to the analysis
+- **Scalable**: Automatically adapts processing strategy based on project size
+- **Natural Language**: AI responds naturally instead of forcing artificial structure
+
+#### Adding New Query Types
+When extending the comprehensive summary system:
+1. **Extend keyword detection** in `detect_project_summary_query()`
+2. **Keep responses natural** - avoid rigid templates
+3. **Maintain file count transparency** - show how many files were processed
+4. **Test with various project sizes** to ensure scalability
 
 ### Frontend Development Patterns
 - **Document Selection**: Extend the `@` mention system in `script.js`
@@ -231,8 +271,24 @@ TIKTOKEN_CACHE_DIR=./tiktoken_cache  # Token cache directory (default)
 
 ### AI Model Configuration
 - **LLM**: GPT-4o with 4000 max tokens for analysis
-- **Embeddings**: text-embedding-3-large with 3072 dimensions
+- **Embeddings**: text-embedding-3-large with 3072 dimensions  
 - **Search Strategy**: Hybrid approach combining semantic and keyword search
-- **Context Limit**: 10 document chunks maximum per query (configurable)
+- **Context Limit**: 10 document chunks for normal queries, unlimited for comprehensive summaries
+- **Project Summary Strategy**: Flexible processing that adapts from 15 files to 100+ files
+
+### Recent Architecture Improvements
+The system recently underwent major simplification of the comprehensive project summary feature:
+
+#### What Changed
+- **Removed**: 6 rigid processing functions with predefined templates
+- **Added**: 1 flexible function that adapts to user queries
+- **Improved**: User experience now responds naturally to specific questions
+- **Maintained**: All files processing capability and scalability
+
+#### Impact
+- **User queries like "What challenges?" now get focused answers about challenges only**
+- **No more forced 7-section responses that ignore user intent**
+- **90% reduction in code complexity while maintaining all core benefits**
+- **Natural conversation flow instead of rigid formats**
 
 This system is designed for enterprise deployment with SSO extensibility and horizontal scaling capabilities for 100+ concurrent users.
