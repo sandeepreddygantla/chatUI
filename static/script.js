@@ -104,10 +104,8 @@ function initializeMarkdownParser() {
 
         marked.use({ renderer });
         
-        console.log('Markdown parser initialized successfully');
         return true;
     } else {
-        console.error('marked.js not loaded');
         return false;
     }
 }
@@ -119,7 +117,6 @@ function formatMarkdownToHTML(text) {
     try {
         // Check if marked.js is available
         if (typeof marked === 'undefined') {
-            console.warn('marked.js not available, falling back to basic parsing');
             return formatMarkdownToHTMLBasic(text);
         }
 
@@ -150,7 +147,6 @@ function formatMarkdownToHTML(text) {
         return html;
         
     } catch (error) {
-        console.error('Error parsing markdown:', error);
         return formatMarkdownToHTMLBasic(text);
     }
 }
@@ -219,7 +215,6 @@ function formatMarkdownToHTMLBasic(text) {
 // Initialize the app
 // Find this line in the DOMContentLoaded event listener:
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing UHG Meeting AI...');
     
     // Initialize markdown parser
     initializeMarkdownParser();
@@ -263,7 +258,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enhanced event listeners setup
 function setupEventListeners() {
-    console.log('Setting up event listeners...');
     
     const messageInput = document.getElementById('message-input');
     if (messageInput) {
@@ -285,7 +279,6 @@ function setupEventListeners() {
 
     // Enhanced page unload handling
     window.addEventListener('beforeunload', function(e) {
-        console.log('Page unloading, saving data...');
         if (conversationHistory.length > 0) {
             saveCurrentConversationToPersistentStorage();
         }
@@ -308,7 +301,6 @@ function saveToLocalStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-        console.error('Error saving to localStorage:', error);
     }
 }
 
@@ -317,24 +309,18 @@ function loadFromLocalStorage(key, defaultValue = null) {
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : defaultValue;
     } catch (error) {
-        console.error('Error loading from localStorage:', error);
         return defaultValue;
     }
 }
 
 // Enhanced data loading with proper UI initialization
 function loadPersistedDataAndInitializeUI() {
-    console.log('Loading persisted data and initializing UI...');
     
     // Load saved conversations
     const savedData = loadFromLocalStorage(STORAGE_KEYS.CONVERSATIONS, []);
     savedConversations = savedData;
-    console.log(`Loaded ${savedConversations.length} saved conversations`);
-
     // Load current conversation ID
     currentConversationId = loadFromLocalStorage(STORAGE_KEYS.CURRENT_ID, null);
-    console.log(`Current conversation ID: ${currentConversationId}`);
-
     // Load conversation counter
     conversationCounter = loadFromLocalStorage(STORAGE_KEYS.COUNTER, 1);
 
@@ -342,19 +328,16 @@ function loadPersistedDataAndInitializeUI() {
     if (currentConversationId) {
         const currentConv = savedConversations.find(c => c.id === currentConversationId);
         if (currentConv) {
-            console.log(`Loading existing conversation: ${currentConv.title}`);
             conversationHistory = [...currentConv.history];
             loadConversationUI();
             updateChatTitle(currentConv.title);
         } else {
-            console.warn(`Current conversation ${currentConversationId} not found, resetting`);
             currentConversationId = null;
             conversationHistory = [];
             showWelcomeScreen();
             saveToLocalStorage(STORAGE_KEYS.CURRENT_ID, null);
         }
     } else {
-        console.log('No current conversation, showing welcome screen');
         conversationHistory = [];
         showWelcomeScreen();
     }
@@ -390,7 +373,6 @@ function clearMessagesArea() {
 
 // Updated loadConversationUI function with better error handling
 function loadConversationUI() {
-    console.log('Loading conversation UI...');
     
     // Ensure welcome screen is hidden
     const welcomeScreen = document.getElementById('welcome-screen');
@@ -405,7 +387,6 @@ function loadConversationUI() {
     
     // Add conversations from history
     conversationHistory.forEach((msg, index) => {
-        console.log(`Adding message ${index + 1}: ${msg.role}`);
         addMessageToUI(msg.role, msg.content, false); // false = don't update history
     });
     
@@ -414,18 +395,16 @@ function loadConversationUI() {
         messagesArea.scrollTop = messagesArea.scrollHeight;
     }, 100);
     
-    console.log('Conversation UI loaded successfully');
 }
 
 // Enhanced showWelcomeScreen function
 function showWelcomeScreen() {
-    console.log('Showing welcome screen...');
     
     const messagesArea = document.getElementById('messages-area');
     messagesArea.innerHTML = `
         <div class="welcome-screen" id="welcome-screen">
             <div class="welcome-icon">🤖</div>
-            <div class="welcome-title">Welcome to UHG Meeting AI</div>
+            <div class="welcome-title">Welcome to Document Fulfillment</div>
             <div class="welcome-text">
                 Upload your meeting documents and start asking questions. I can help you analyze meeting content, extract key insights, find action items, and track discussions across multiple documents using advanced AI.
             </div>
@@ -445,17 +424,11 @@ function showWelcomeScreen() {
                     <button class="sample-prompt" onclick="insertSampleQuery('List all action items from last week\\'s meetings')">
                         List all action items from last week's meetings
                     </button>
-                    <button class="sample-prompt" onclick="insertSampleQuery('Who are the key participants and their roles?')">
-                        Who are the key participants and their roles?
-                    </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('Provide a comprehensive summary of all meetings')">
                         🗂️ Provide a comprehensive summary of all meetings
                     </button>
                     <button class="sample-prompt" onclick="insertSampleQuery('Summarize decisions made in project meetings')">
                         Summarize decisions made in project meetings
-                    </button>
-                    <button class="sample-prompt" onclick="insertSampleQuery('What challenges or blockers were identified?')">
-                        What challenges or blockers were identified?
                     </button>
                 </div>
             </div>
@@ -500,8 +473,6 @@ async function sendMessage() {
     const message = input.value.trim();
     
     if (!message || isProcessing) return;
-
-    console.log('Sending message in conversation:', currentConversationId || 'new conversation');
 
     isProcessing = true;
     
@@ -590,7 +561,6 @@ async function sendMessage() {
                 // Auto-save conversation after each exchange
                 saveCurrentConversationToPersistentStorage();
                 
-                console.log('Message sent and conversation saved');
             } else {
                 addMessageToUI('assistant', 'Sorry, I encountered an error: ' + (data.error || 'Unknown error'), true);
             }
@@ -599,7 +569,6 @@ async function sendMessage() {
         }
     } catch (error) {
         hideTypingIndicator();
-        console.error('Chat error:', error);
         addMessageToUI('assistant', 'Sorry, I\'m having trouble processing your request. Please check your connection and try again.', true);
     } finally {
         isProcessing = false;
@@ -664,7 +633,6 @@ function copyToClipboard(text) {
 }
 
 function showNotification(message, type = 'success') {
-    console.log('Creating notification:', message, 'type:', type);
     
     // Remove any existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
@@ -701,10 +669,8 @@ function showNotification(message, type = 'success') {
     `;
     
     document.body.appendChild(notification);
-    console.log('Notification added to DOM');
     
     setTimeout(() => {
-        console.log('Removing notification');
         if (notification.parentNode) {
             notification.remove();
         }
@@ -771,15 +737,11 @@ async function loadDocuments() {
             const data = await response.json();
             if (data.success) {
                 availableDocuments = data.documents;
-                console.log(`Loaded ${availableDocuments.length} documents for @ mention selection`);
-                console.log('📝 Available filenames:', availableDocuments.map(d => d.filename));
-                
                 // Also reload folders when documents are loaded to keep them in sync
                 await loadFolders();
             }
         }
     } catch (error) {
-        console.error('Error loading documents:', error);
     }
 }
 
@@ -807,12 +769,9 @@ function detectAtMention(input) {
     if (atPos !== -1) {
         const fullMention = text.substring(atPos + 1, cursorPos);
         
-        console.log('🔍 detectAtMention found symbol:', { symbol, atPos, fullMention, text });
-        
         // Parse mention syntax (@ for projects/meetings/dates, # for folders/files)
         const mentionData = symbol === '#' ? parseFolderMention(fullMention) : parseEnhancedMention(fullMention);
         
-        console.log('🔍 mentionData result:', mentionData);
         
         return { 
             isActive: true, 
@@ -828,7 +787,6 @@ function detectAtMention(input) {
 
 // Parse folder mentions with # symbol
 function parseFolderMention(mentionText) {
-    console.log('🔍 parseFolderMention called with:', mentionText);
     
     if (mentionText === '') {
         // Just # typed, show folders
@@ -844,7 +802,6 @@ function parseFolderMention(mentionText) {
     const hasArrow = mentionText.endsWith('>');
     const folderName = hasArrow ? mentionText.slice(0, -1) : mentionText;
     
-    console.log('🔍 Parsing folder mention:', { mentionText, hasArrow, folderName });
     
     const result = {
         type: hasArrow ? 'folder_files' : 'folder_selected',
@@ -854,7 +811,6 @@ function parseFolderMention(mentionText) {
         showFiles: hasArrow
     };
     
-    console.log('🔍 parseFolderMention result:', result);
     return result;
 }
 
@@ -902,7 +858,6 @@ function parseEnhancedMention(mentionText) {
             // Check if there's a / at the end to show files within folder
             const hasSlash = value.endsWith('/');
             const folderName = hasSlash ? value.slice(0, -1) : value;
-            console.log('🔍 Folder parsing:', { value, hasSlash, folderName, type: hasSlash ? 'folder_files' : 'folder' });
             return {
                 type: hasSlash ? 'folder_files' : 'folder',
                 searchTerm: folderName,
@@ -945,7 +900,6 @@ function showDocumentDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Document dropdown elements not found');
         return;
     }
     
@@ -955,10 +909,6 @@ function showDocumentDropdown(searchText = '') {
         header.textContent = '📁 Select Folder or 📄 File';
     }
     
-    console.log('🔍 @ dropdown - showing folders and files');
-    console.log('Available folders:', availableFolders.length);
-    console.log('Available documents:', availableDocuments.length);
-    console.log('Search text:', searchText);
     
     // Show folders first, then individual files
     const filteredFolders = filterFolders(searchText);
@@ -966,8 +916,6 @@ function showDocumentDropdown(searchText = '') {
         searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
     );
     
-    console.log('Filtered folders:', filteredFolders.length);
-    console.log('Filtered documents:', filteredDocs.length);
     
     let html = '';
     
@@ -1070,15 +1018,11 @@ function showDocumentDropdown(searchText = '') {
 }
 
 function showFolderFilesDropdown(folderName, searchText = '') {
-    console.log('🔍 showFolderFilesDropdown called with:', { folderName, searchText });
-    console.log('🔍 Available folders:', availableFolders);
-    console.log('🔍 Available documents:', availableDocuments);
     
     const dropdown = document.getElementById('document-dropdown');
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1090,7 +1034,6 @@ function showFolderFilesDropdown(folderName, searchText = '') {
     
     // Find the folder
     const folder = availableFolders.find(f => f.display_name === folderName);
-    console.log('🔍 Found folder:', folder);
     
     if (folder) {
         // Get files from this folder - use multiple strategies
@@ -1101,9 +1044,7 @@ function showFolderFilesDropdown(folderName, searchText = '') {
             folderDocs = folder.documents.filter(doc => 
                 searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
             );
-            console.log('🔍 Strategy 1 - Using pre-stored documents:', folderDocs);
         } else {
-            console.log('🔍 Strategy 2 - Matching by project_id. Folder project_id:', folder.project_id);
             
             // Strategy 2: Match by project_id or show all documents if default folder
             if (folder.project_id === 'default' || folderName === 'Default Folder') {
@@ -1111,7 +1052,6 @@ function showFolderFilesDropdown(folderName, searchText = '') {
                 folderDocs = availableDocuments.filter(doc => 
                     searchText === '' || doc.filename.toLowerCase().includes(searchText.toLowerCase())
                 );
-                console.log('🔍 Default folder - showing all documents:', folderDocs);
             } else {
                 // Match by project_id
                 folderDocs = availableDocuments.filter(doc => {
@@ -1120,18 +1060,8 @@ function showFolderFilesDropdown(folderName, searchText = '') {
                     const matchesSearch = searchText === '' || 
                                         doc.filename.toLowerCase().includes(searchText.toLowerCase());
                     
-                    console.log('🔍 Document check:', {
-                        filename: doc.filename,
-                        doc_project_id: doc.project_id,
-                        folder_project_id: folder.project_id,
-                        matchesByProjectId,
-                        matchesByFolderPath,
-                        matchesSearch
-                    });
-                    
                     return (matchesByProjectId || matchesByFolderPath) && matchesSearch;
                 });
-                console.log('🔍 Project-based matching result:', folderDocs);
             }
         }
         
@@ -1185,7 +1115,6 @@ function hideDocumentDropdown() {
 // Enhanced @ mention dropdown functions
 function showEnhancedDropdown(mention) {
     currentMentionType = mention.type;
-    console.log('🔍 showEnhancedDropdown called with:', mention);
     
     switch (mention.type) {
         case 'document':
@@ -1222,7 +1151,6 @@ function showFolderListDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1233,7 +1161,6 @@ function showFolderListDropdown(searchText = '') {
     }
     
     const filteredFolders = filterFolders(searchText);
-    console.log('Filtered folders:', filteredFolders);
     
     if (filteredFolders.length === 0) {
         documentList.innerHTML = '<div style="padding: 16px; text-align: center; color: #6B7280;">No folders found</div>';
@@ -1269,7 +1196,6 @@ function showSelectedFolderDropdown(folderName) {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1332,7 +1258,6 @@ function showProjectDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1381,7 +1306,6 @@ function showMeetingDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1430,7 +1354,6 @@ function showDateDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1474,7 +1397,6 @@ function showFolderDropdown(searchText = '') {
     const documentList = document.getElementById('document-list');
     
     if (!dropdown || !documentList) {
-        console.error('Dropdown elements not found');
         return;
     }
     
@@ -1633,9 +1555,7 @@ function parseMessageForDocuments(message) {
                 const document = availableDocuments.find(d => d.filename === mention.value);
                 if (document) {
                     filterData.documentIds.push(document.document_id);
-                    console.log('✅ File filter added:', mention.value, 'Document ID:', document.document_id);
                 } else {
-                    console.log('❌ File not found:', mention.value);
                 }
                 break;
         }
@@ -1906,7 +1826,6 @@ function selectMention(type, displayName, data) {
 }
 
 function selectSingleFile(doc) {
-    console.log('🔍 selectSingleFile called with:', doc);
     
     const input = document.getElementById('message-input');
     const mention = detectAtMention(input);
@@ -1933,9 +1852,6 @@ function selectSingleFile(doc) {
             }
         });
         
-        console.log('✅ File selected:', doc.filename);
-        console.log('📝 Updated input value:', input.value);
-        console.log('📋 Selected mentions:', selectedMentions);
     }
     
     hideEnhancedDropdown();
@@ -1948,11 +1864,9 @@ async function loadProjects() {
             const data = await response.json();
             if (data.success && data.projects) {
                 availableProjects = data.projects;
-                console.log(`Loaded ${availableProjects.length} projects`);
             }
         }
     } catch (error) {
-        console.error('Error loading projects:', error);
     }
 }
 
@@ -1963,11 +1877,9 @@ async function loadMeetings() {
             const data = await response.json();
             if (data.success && data.meetings) {
                 availableMeetings = data.meetings;
-                console.log(`Loaded ${availableMeetings.length} meetings`);
             }
         }
     } catch (error) {
-        console.error('Error loading meetings:', error);
     }
 }
 
@@ -1978,23 +1890,15 @@ async function loadFolders() {
         if (response.ok) {
             const data = await response.json();
             if (data.success && data.documents) {
-                console.log('Total documents:', data.documents.length);
-                
-                // Debug: Check what folder_path values we have
-                const docsWithFolders = data.documents.filter(doc => doc.folder_path);
-                console.log('Documents with folder_path:', docsWithFolders.length);
-                console.log('Sample folder paths:', docsWithFolders.slice(0, 5).map(doc => doc.folder_path));
-                
                 // Extract unique folder paths from documents
+                const docsWithFolders = data.documents.filter(doc => doc.folder_path);
                 const folderPaths = [...new Set(data.documents
                     .filter(doc => doc.folder_path && doc.folder_path.trim())
                     .map(doc => doc.folder_path))];
                 
-                console.log('Unique folder paths found:', folderPaths);
                 
                 if (folderPaths.length === 0) {
                     // If no folder_path, try to infer from project_id or create default folders
-                    console.log('No folder_path found, creating folders from available documents...');
                     
                     // Group documents by project_id if available
                     const projectGroups = {};
@@ -2006,7 +1910,6 @@ async function loadFolders() {
                         projectGroups[projectId].push(doc);
                     });
                     
-                    console.log('🔍 Project groups created:', projectGroups);
                     
                     const projectFolders = Object.keys(projectGroups).map((projectId, index) => {
                         const folderName = projectId === 'default' ? 'Default Folder' : `Project ${index + 1}`;
@@ -2046,10 +1949,7 @@ async function loadFolders() {
                     });
                 }
                 
-                console.log(`✅ Loaded ${availableFolders.length} folders:`, availableFolders);
-                console.log('📁 Available folder display_names:', availableFolders.map(f => f.display_name));
             } else {
-                console.log('❌ No documents data received');
                 // Create default folders even if no documents
                 availableFolders = [
                     {
@@ -2060,7 +1960,6 @@ async function loadFolders() {
                 ];
             }
         } else {
-            console.log('❌ Failed to fetch documents:', response.status);
             // Create default folders even if API fails
             availableFolders = [
                 {
@@ -2071,7 +1970,6 @@ async function loadFolders() {
             ];
         }
     } catch (error) {
-        console.error('❌ Error loading folders:', error);
         // Create default folders even if there's an error
         availableFolders = [
             {
@@ -2091,7 +1989,6 @@ async function loadFolders() {
                 display_name: 'Default Folder'
             }
         ];
-        console.log('🔧 Created default folder as fallback');
     }
 }
 
@@ -2100,18 +1997,11 @@ function setupAtMentionDetection() {
     
     // Handle @ mention detection on input
     input.addEventListener('input', function(e) {
-        console.log('🔍 Input event triggered. Current value:', input.value);
-        console.log('🔍 Cursor position:', input.selectionStart);
-        
         const mention = detectAtMention(input);
         
-        console.log('🔍 detectAtMention returned:', mention);
-        
         if (mention.isActive) {
-            console.log('🔍 Mention is active, calling showEnhancedDropdown');
             showEnhancedDropdown(mention);
         } else {
-            console.log('🔍 Mention is not active, hiding dropdown');
             hideEnhancedDropdown();
         }
     });
@@ -2221,7 +2111,6 @@ function updateConversationList() {
         
         // Add click handler
         conversationItem.onclick = () => {
-            console.log(`Clicking on conversation: ${conv.id}`);
             loadConversation(conv.id);
         };
         
@@ -2265,11 +2154,9 @@ function updateConversationList() {
 // Updated saveCurrentConversation function with better error handling
 function saveCurrentConversation() {
     if (conversationHistory.length === 0) {
-        console.log('No conversation history to save');
         return;
     }
     
-    console.log('Saving current conversation...');
     
     // Create title from first user message
     const firstUserMessage = conversationHistory.find(msg => msg.role === 'user');
@@ -2288,9 +2175,7 @@ function saveCurrentConversation() {
                 existingConv.history = [...conversationHistory];
                 existingConv.title = title;
                 existingConv.lastUpdated = new Date().toISOString();
-                console.log(`Updated existing conversation: ${title}`);
             } else {
-                console.error(`Conversation ${currentConversationId} not found for update`);
             }
         } else {
             // Create new conversation
@@ -2304,24 +2189,20 @@ function saveCurrentConversation() {
             savedConversations.unshift(newConversation);
             currentConversationId = newConversation.id;
             conversationCounter++;
-            console.log(`Created new conversation: ${title}`);
         }
         
         updateConversationList();
         updateChatTitle(title);
         
     } catch (error) {
-        console.error('Error saving conversation:', error);
     }
 }
 
 // Updated loadConversation function with proper state management
 function loadConversation(conversationId) {
-    console.log(`Loading conversation: ${conversationId}`);
     
     const conversation = savedConversations.find(c => c.id === conversationId);
     if (!conversation) {
-        console.error(`Conversation ${conversationId} not found`);
         return;
     }
     
@@ -2329,7 +2210,6 @@ function loadConversation(conversationId) {
     if (currentConversationId && 
         currentConversationId !== conversationId && 
         conversationHistory.length > 0) {
-        console.log('Saving current conversation before switching');
         saveCurrentConversationToPersistentStorage();
     }
     
@@ -2337,7 +2217,6 @@ function loadConversation(conversationId) {
     currentConversationId = conversationId;
     conversationHistory = [...conversation.history]; // Deep copy to prevent reference issues
     
-    console.log(`Loaded conversation with ${conversationHistory.length} messages`);
     
     // Clear and rebuild the UI
     clearMessagesArea();
@@ -2352,16 +2231,13 @@ function loadConversation(conversationId) {
     // Save current conversation ID to localStorage
     saveToLocalStorage(STORAGE_KEYS.CURRENT_ID, currentConversationId);
     
-    console.log(`Successfully switched to conversation: ${conversation.title}`);
 }
 
 // Updated startNewChat function with proper cleanup
 function startNewChat() {
-    console.log('Starting new chat...');
     
     // Save current conversation if it exists and has content
     if (currentConversationId && conversationHistory.length > 0) {
-        console.log('Saving current conversation before starting new chat');
         saveCurrentConversationToPersistentStorage();
     }
     
@@ -2382,12 +2258,10 @@ function startNewChat() {
     // Save current state
     saveToLocalStorage(STORAGE_KEYS.CURRENT_ID, null);
     
-    console.log('New chat started successfully');
 }
 
 // Updated clearChat function (for "Getting Started" button)
 function clearChat() {
-    console.log('Clearing chat (Getting Started clicked)...');
     
     // Same as starting new chat
     startNewChat();
@@ -2402,12 +2276,10 @@ function updateChatTitle(title) {
 }
 
 function deleteConversation(conversationId) {
-    console.log(`Attempting to delete conversation: ${conversationId}`);
     
     // Find the conversation to get its title for confirmation
     const conversation = savedConversations.find(c => c.id === conversationId);
     if (!conversation) {
-        console.error(`Conversation ${conversationId} not found`);
         return;
     }
     
@@ -2422,12 +2294,10 @@ function deleteConversation(conversationId) {
         const conversationIndex = savedConversations.findIndex(c => c.id === conversationId);
         if (conversationIndex !== -1) {
             savedConversations.splice(conversationIndex, 1);
-            console.log(`Removed conversation from array: ${conversation.title}`);
         }
         
         // Handle if we're deleting the currently active conversation
         if (currentConversationId === conversationId) {
-            console.log('Deleting currently active conversation, starting new chat');
             currentConversationId = null;
             conversationHistory = [];
             
@@ -2443,10 +2313,8 @@ function deleteConversation(conversationId) {
         // Show success notification
         showNotification(`Conversation "${conversation.title}" deleted successfully`);
         
-        console.log(`Successfully deleted conversation: ${conversation.title}`);
         
     } catch (error) {
-        console.error('Error deleting conversation:', error);
         showNotification('Error deleting conversation. Please try again.');
     }
 }
@@ -2515,7 +2383,6 @@ async function initializeApp() {
             }
         }
     } catch (error) {
-        console.error('Initialization error:', error);
     }
     
     // Initialize conversation list
@@ -2527,7 +2394,6 @@ function regenerateResponse() {
     if (conversationHistory.length >= 2) {
         const lastUserMessage = conversationHistory[conversationHistory.length - 2];
         
-        console.log('Regenerating response for:', lastUserMessage.content.substring(0, 50) + '...');
         
         // Remove last assistant response from history
         conversationHistory.pop();
@@ -2563,12 +2429,10 @@ function regenerateResponse() {
                             timestamp: new Date().toISOString()
                         });
                         saveCurrentConversationToPersistentStorage();
-                        console.log('Response regenerated successfully');
                     }
                 }
             } catch (error) {
                 hideTypingIndicator();
-                console.error('Error regenerating response:', error);
                 addMessageToUI('assistant', 'Sorry, I encountered an error while regenerating the response.', true);
             }
         }, 1000);
@@ -2668,7 +2532,6 @@ function addFilesToUpload(files) {
             status: 'ready'
         });
         addedCount++;
-        console.log(`Added file: ${file.name} (${formatFileSize(file.size)})`);
     });
 
     updateUploadedFilesList();
@@ -2679,7 +2542,6 @@ function addFilesToUpload(files) {
     }
     
     if (errorCount > 0) {
-        console.log(`${errorCount} files were rejected due to validation errors`);
     }
 }
 
@@ -2770,8 +2632,6 @@ async function processFiles() {
             formData.append('project_id', projectSelect.value);
         }
 
-        console.log(`Uploading ${uploadedFiles.length} files...`);
-
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
@@ -2779,39 +2639,23 @@ async function processFiles() {
 
         if (response.ok) {
             const result = await response.json();
-            console.log('Upload response:', result);
-            console.log('Result structure:', {
-                success: result.success,
-                hasResults: !!result.results,
-                resultsLength: result.results ? result.results.length : 0,
-                processed: result.processed,
-                total: result.total
-            });
             
             let successCount = 0;
 
             if (result.success && result.results && Array.isArray(result.results)) {
                 // Process individual file results
-                console.log('Processing individual file results...');
                 result.results.forEach(fileResult => {
-                    console.log('Processing result for:', fileResult.filename, 'success:', fileResult.success);
-                    console.log('Available file names:', uploadedFiles.map(f => f.name));
-                    
                     const fileObj = uploadedFiles.find(f => f.name === fileResult.filename);
-                    console.log('Found matching file object:', !!fileObj);
                     
                     if (fileObj) {
                         if (fileResult.success) {
                             fileObj.status = 'success';
                             successCount++;
-                            console.log(`✅ ${fileResult.filename} processed successfully`);
                         } else {
                             fileObj.status = 'error';
                             fileObj.error = fileResult.error || 'Processing failed';
-                            console.log(`❌ ${fileResult.filename} failed: ${fileObj.error}`);
                         }
                     } else {
-                        console.warn(`No matching file object found for: ${fileResult.filename}`);
                         // Try to find by partial match
                         const partialMatch = uploadedFiles.find(f => 
                             f.name.includes(fileResult.filename) || fileResult.filename.includes(f.name)
@@ -2819,13 +2663,11 @@ async function processFiles() {
                         if (partialMatch && fileResult.success) {
                             partialMatch.status = 'success';
                             successCount++;
-                            console.log(`✅ ${fileResult.filename} processed successfully (partial match)`);
                         }
                     }
                 });
             } else if (result.success) {
                 // Fallback: if no individual results but overall success
-                console.log('No individual results, assuming all successful');
                 uploadedFiles.forEach(fileObj => {
                     fileObj.status = 'success';
                     successCount++;
@@ -2834,7 +2676,6 @@ async function processFiles() {
             
             // Additional fallback: Use processed count from backend
             if (successCount === 0 && result.success && result.processed > 0) {
-                console.log(`Backend reports ${result.processed} files processed successfully, updating UI`);
                 uploadedFiles.slice(0, result.processed).forEach(fileObj => {
                     fileObj.status = 'success';
                     successCount++;
@@ -2843,7 +2684,6 @@ async function processFiles() {
             
             if (!result.success) {
                 // Overall failure
-                console.error('Upload failed:', result.error || 'Unknown error');
                 uploadedFiles.forEach(fileObj => {
                     fileObj.status = 'error';
                     fileObj.error = result.error || 'Upload failed';
@@ -2855,20 +2695,16 @@ async function processFiles() {
 
             // Refresh stats if any files were processed successfully
             if (successCount > 0) {
-                console.log(`${successCount} files uploaded successfully, refreshing stats...`);
                 await loadSystemStats(true); // Force refresh after upload
             }
 
             // Show completion message
-            console.log(`Showing completion message for ${successCount} successful uploads`);
             setTimeout(() => {
                 if (successCount > 0) {
                     const message = `Successfully processed ${successCount} of ${uploadedFiles.length} documents! Documents are now available for querying.`;
-                    console.log('Showing success notification:', message);
                     showNotification(message);
                 } else {
                     const message = `Failed to process any documents. Please check the files and try again.`;
-                    console.log('Showing error notification:', message);
                     showNotification(message, 'error');
                 }
                 
@@ -2881,12 +2717,10 @@ async function processFiles() {
         } else {
             // HTTP error response
             const errorText = await response.text();
-            console.error('Upload HTTP error:', response.status, errorText);
             throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
         }
 
     } catch (error) {
-        console.error('Upload error:', error);
         
         // Set all files to error status
         uploadedFiles.forEach(fileObj => {
@@ -2914,12 +2748,10 @@ async function loadSystemStats(forceRefresh = false) {
         if (!forceRefresh && statsCache && lastStatsUpdate) {
             const timeSinceLastUpdate = Date.now() - lastStatsUpdate;
             if (timeSinceLastUpdate < STATS_CACHE_DURATION) {
-                console.log('Using cached stats (updated', Math.round(timeSinceLastUpdate / 1000), 'seconds ago)');
                 return statsCache;
             }
         }
 
-        console.log('Fetching fresh stats from server...');
         const response = await fetch('/api/stats');
         if (response.ok) {
             const data = await response.json();
@@ -2927,13 +2759,11 @@ async function loadSystemStats(forceRefresh = false) {
                 // Cache the stats
                 statsCache = data.stats;
                 lastStatsUpdate = Date.now();
-                console.log('Stats loaded and cached successfully');
                 return data.stats;
             }
         }
         return null;
     } catch (error) {
-        console.error('Stats error:', error);
         return null;
     }
 }
@@ -2959,7 +2789,6 @@ async function refreshSystem() {
             showNotification('Refresh failed. Please try again.');
         }
     } catch (error) {
-        console.error('Refresh error:', error);
         showNotification('Refresh failed. Please check your connection.');
     }
 }
@@ -3012,7 +2841,6 @@ function clearStatsCache() {
     statsCache = null;
     lastStatsUpdate = null;
     showNotification('Stats cache cleared');
-    console.log('Stats cache cleared manually');
 }
 
 async function loadDetailedStats(forceRefresh = false) {
@@ -3025,7 +2853,6 @@ async function loadDetailedStats(forceRefresh = false) {
             displayStatsError('No data available');
         }
     } catch (error) {
-        console.error('Detailed stats error:', error);
         displayStatsError('Connection error');
     }
 }
@@ -3179,14 +3006,6 @@ function showStats() {
                             <div><strong>Latest:</strong> ${stats.date_range?.latest || 'N/A'}</div>
                         </div>
                     </div>
-                    <div style="padding: 16px; background: #F8F9FF; border-radius: 8px;">
-                        <h3 style="color: #002677; margin: 0 0 12px 0;">🤖 AI Configuration</h3>
-                        <div style="color: #4B4D4F; display: grid; gap: 8px;">
-                            <div><strong>LLM Model:</strong> ${stats.openai_integration?.llm_model || 'Unknown'}</div>
-                            <div><strong>Embedding Model:</strong> ${stats.openai_integration?.embedding_model || 'Unknown'}</div>
-                            <div><strong>Search Type:</strong> ${stats.openai_integration?.search_type || 'Unknown'}</div>
-                        </div>
-                    </div>
                 </div>
             `;
         } else {
@@ -3274,7 +3093,6 @@ function setupAutoSave() {
     // Only keep auto-save conversations every 2 minutes
     setInterval(() => {
         if (conversationHistory.length > 0 && currentConversationId) {
-            console.log('Auto-saving conversation...');
             saveCurrentConversationToPersistentStorage();
         }
     }, 120000); // 2 minutes
@@ -3305,14 +3123,12 @@ function toggleSidebar() {
             container.classList.remove('sidebar-collapsed');
             toggleIcon.textContent = '☰';
             toggleBtn.classList.remove('active');
-            console.log('Sidebar expanded - container classes:', container.classList.toString());
         } else {
             // Hide sidebar
             sidebar.classList.add('collapsed');
             container.classList.add('sidebar-collapsed');
             toggleIcon.textContent = '≫';
             toggleBtn.classList.add('active');
-            console.log('Sidebar collapsed - container classes:', container.classList.toString());
         }
     }
 }
@@ -3435,13 +3251,6 @@ function initializeMobileFixes() {
 
 // Debugging functions (can be removed in production)
 function debugConversationState() {
-    console.log('=== Conversation State Debug ===');
-    console.log('Current conversation ID:', currentConversationId);
-    console.log('Conversation history length:', conversationHistory.length);
-    console.log('Saved conversations count:', savedConversations.length);
-    console.log('Conversation counter:', conversationCounter);
-    console.log('Stats cache info:', getStatsCacheInfo());
-    console.log('===============================');
 }
 
 // Make debug function globally available for testing
@@ -3492,21 +3301,18 @@ function closeConversationMenu() {
 }
 
 function showEditModal() {
-    console.log('showEditModal called, currentMenuConversationId:', currentMenuConversationId);
     
     // Store the ID before closing menu (which clears currentMenuConversationId)
     const conversationId = currentMenuConversationId;
     closeConversationMenu();
     
     if (!conversationId) {
-        console.error('No conversationId available');
         showNotification('No conversation selected');
         return;
     }
     
     const conversation = savedConversations.find(c => c.id === conversationId);
     if (!conversation) {
-        console.error('Conversation not found for ID:', conversationId);
         showNotification('Conversation not found');
         return;
     }
@@ -3518,7 +3324,6 @@ function showEditModal() {
     const input = document.getElementById('edit-input');
     
     if (!modal || !input) {
-        console.error('Modal or input not found:', { modal, input });
         return;
     }
     
@@ -3593,21 +3398,18 @@ function confirmEdit() {
 }
 
 function showDeleteModal() {
-    console.log('showDeleteModal called, currentMenuConversationId:', currentMenuConversationId);
     
     // Store the ID before closing menu (which clears currentMenuConversationId)
     const conversationId = currentMenuConversationId;
     closeConversationMenu();
     
     if (!conversationId) {
-        console.error('No conversationId available');
         showNotification('No conversation selected');
         return;
     }
     
     const conversation = savedConversations.find(c => c.id === conversationId);
     if (!conversation) {
-        console.error('Conversation not found for ID:', conversationId);
         showNotification('Conversation not found');
         return;
     }
@@ -3619,7 +3421,6 @@ function showDeleteModal() {
     const message = document.getElementById('delete-message');
     
     if (!modal || !message) {
-        console.error('Modal or message not found:', { modal, message });
         return;
     }
     
@@ -3674,7 +3475,6 @@ function confirmDelete() {
         showNotification(`Conversation "${conversation.title}" deleted successfully`);
         
     } catch (error) {
-        console.error('Error deleting conversation:', error);
         closeDeleteModal();
         showNotification('Error deleting conversation. Please try again.');
     }
@@ -3695,7 +3495,6 @@ async function checkAuthenticationStatus() {
         window.location.href = '/login';
         return false;
     } catch (error) {
-        console.error('Authentication check failed:', error);
         window.location.href = '/login';
         return false;
     }
@@ -3737,7 +3536,6 @@ async function logout() {
             showNotification('Logout failed. Please try again.');
         }
     } catch (error) {
-        console.error('Logout error:', error);
         showNotification('Logout failed. Please try again.');
     }
 }
@@ -3755,10 +3553,8 @@ async function loadProjects() {
             availableProjects = data.projects;
             updateProjectSelect();
         } else {
-            console.error('Failed to load projects:', data.error);
         }
     } catch (error) {
-        console.error('Error loading projects:', error);
     }
 }
 
@@ -3854,7 +3650,6 @@ async function confirmCreateProject() {
             showNotification('Failed to create project: ' + data.error);
         }
     } catch (error) {
-        console.error('Error creating project:', error);
         showNotification('Failed to create project');
     }
 }
@@ -3915,8 +3710,18 @@ function closeUserProfile() {
 
 function updateUserProfileDisplay() {
     // Check if user is authenticated and get user data
-    fetch('/api/auth/status')
-        .then(response => response.json())
+    fetch('/api/auth/status', {
+        method: 'GET',
+        credentials: 'include'  // Include cookies for session
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                // If auth check fails, redirect to login
+                throw new Error('Authentication check failed');
+            }
+        })
         .then(data => {
             if (data.authenticated && data.user) {
                 const user = data.user;
@@ -3929,7 +3734,6 @@ function updateUserProfileDisplay() {
                 updateElement('profile-full-name', user.full_name || 'UHG User');
                 updateElement('profile-username', user.username || 'uhg_user');
                 updateElement('profile-email', user.email || 'user@uhg.com');
-                updateElement('profile-user-id', user.user_id || 'USER001');
                 
                 // Update avatars with initials
                 const initials = getInitials(user.full_name || 'UHG User');
@@ -3938,20 +3742,19 @@ function updateUserProfileDisplay() {
                 updateElement('avatar-initials', initials);
                 
                 // Update timestamps (placeholder - would need backend support for real data)
-                updateElement('profile-last-login', formatDateTime(new Date()));
                 updateElement('profile-created-at', 'January 15, 2025');
                 
                 // Load user statistics
                 loadUserStats();
+                
             } else {
-                // Not authenticated, show defaults or redirect to login
-                console.log('User not authenticated');
+                // Redirect to login if not authenticated
+                window.location.href = '/login';
             }
         })
         .catch(error => {
-            console.error('Error fetching user data:', error);
-            // Show default values in case of error
-            showDefaultUserInfo();
+            // On any error, redirect to login (could be session expired, server restart, etc.)
+            window.location.href = '/login';
         });
 }
 
@@ -4052,7 +3855,6 @@ function detectDateQuery(message) {
 
 function addDateSuggestions(message) {
     if (detectDateQuery(message)) {
-        console.log('🗓️ Date-based query detected:', message);
         
         // You could add UI hints here, such as:
         // - Highlighting suggested date options

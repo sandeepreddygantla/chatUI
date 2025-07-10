@@ -676,49 +676,6 @@ class VectorDatabase:
         logger.warning(f"No date range found for timeframe: {timeframe}")
         return None, None
     
-    def _detect_timeframe_from_query(self, query: str) -> Optional[str]:
-        """Enhanced timeframe detection from natural language query"""
-        query_lower = query.lower()
-        
-        # Comprehensive timeframe patterns with priority
-        timeframe_patterns = [
-            # Current periods (highest priority)
-            (['current week', 'this week'], 'current_week'),
-            (['current month', 'this month'], 'current_month'),
-            (['current quarter', 'this quarter'], 'current_quarter'),
-            (['current year', 'this year'], 'current_year'),
-            
-            # Last periods (high priority)
-            (['last week', 'past week', 'previous week'], 'last_week'),
-            (['last month', 'past month', 'previous month'], 'last_month'),
-            (['last quarter', 'past quarter', 'previous quarter'], 'last_quarter'),
-            (['last year', 'past year', 'previous year'], 'last_year'),
-            
-            # Specific day counts (medium priority)
-            (['last 7 days', 'past 7 days', 'last seven days'], 'last_7_days'),
-            (['last 14 days', 'past 14 days', 'last two weeks'], 'last_14_days'),
-            (['last 30 days', 'past 30 days', 'last thirty days'], 'last_30_days'),
-            (['last 60 days', 'past 60 days', 'last sixty days'], 'last_60_days'),
-            (['last 90 days', 'past 90 days', 'last ninety days'], 'last_90_days'),
-            
-            # Extended periods (lower priority)
-            (['last 3 months', 'past 3 months', 'last three months'], 'last_3_months'),
-            (['last 6 months', 'past 6 months', 'last six months'], 'last_6_months'),
-            (['last 12 months', 'past 12 months', 'last twelve months'], 'last_12_months'),
-            
-            # Recent periods (lowest priority)
-            (['recent', 'recently', 'lately'], 'recent'),
-        ]
-        
-        # Find the best match (earliest occurrence has highest priority)
-        for patterns, timeframe in timeframe_patterns:
-            for pattern in patterns:
-                if pattern in query_lower:
-                    logger.info(f"Detected timeframe pattern '{pattern}' -> {timeframe}")
-                    return timeframe
-        
-        return None
-    
     def _generate_date_based_summary(self, query: str, documents: List[Any], timeframe: str, include_context: bool = False) -> Union[str, Tuple[str, str]]:
         """Generate intelligent date-based summary with chronological organization"""
         logger.info(f"Generating date-based summary for {len(documents)} documents in {timeframe} timeframe")
@@ -1279,6 +1236,128 @@ class VectorDatabase:
             }
         return None
     
+    def create_session(self, user_id: str, session_id: str, expires_at: datetime) -> bool:
+        """Create a new user session"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT INTO user_sessions (session_id, user_id, expires_at, is_active)
+                VALUES (?, ?, ?, ?)
+            ''', (session_id, user_id, expires_at.isoformat(), True))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error creating session: {e}")
+            return False
+    
+    def validate_session(self, session_id: str) -> Optional[str]:
+        """Validate a session and return user_id if valid"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT user_id, expires_at FROM user_sessions 
+                WHERE session_id = ? AND is_active = TRUE
+            ''', (session_id,))
+            
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                user_id, expires_at = result
+                # Check if session is still valid
+                expiry_time = datetime.fromisoformat(expires_at)
+                if expiry_time > datetime.now():
+                    return user_id
+                else:
+                    # Session expired, deactivate it
+                    self.deactivate_session(session_id)
+                    return None
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error validating session: {e}")
+            return None
+    
+    def deactivate_session(self, session_id: str) -> bool:
+        """Deactivate a session"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                UPDATE user_sessions SET is_active = FALSE 
+                WHERE session_id = ?
+            ''', (session_id,))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error deactivating session: {e}")
+            return False
+    
+    def cleanup_expired_sessions(self) -> int:
+        """Clean up expired sessions and return count of cleaned sessions"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            now = datetime.now().isoformat()
+            
+            # Count expired sessions
+            cursor.execute('''
+                SELECT COUNT(*) FROM user_sessions 
+                WHERE expires_at < ? AND is_active = TRUE
+            ''', (now,))
+            
+            count = cursor.fetchone()[0]
+            
+            # Deactivate expired sessions
+            cursor.execute('''
+                UPDATE user_sessions SET is_active = FALSE 
+                WHERE expires_at < ? AND is_active = TRUE
+            ''', (now,))
+            
+            conn.commit()
+            conn.close()
+            
+            if count > 0:
+                logger.info(f"Cleaned up {count} expired sessions")
+            
+            return count
+            
+        except Exception as e:
+            logger.error(f"Error cleaning up expired sessions: {e}")
+            return 0
+    
+    def extend_session(self, session_id: str, new_expires_at: datetime) -> bool:
+        """Extend a session's expiry time"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                UPDATE user_sessions SET expires_at = ? 
+                WHERE session_id = ? AND is_active = TRUE
+            ''', (new_expires_at.isoformat(), session_id))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error extending session: {e}")
+            return False
+    
     def save_index(self):
         """Save FAISS index to disk"""
         if self.index:
@@ -1309,6 +1388,48 @@ class EnhancedMeetingDocumentProcessor:
         
         logger.info("Enhanced Meeting Document Processor initialized with OpenAI")
     
+    def _detect_timeframe_from_query(self, query: str) -> Optional[str]:
+        """Enhanced timeframe detection from natural language query"""
+        query_lower = query.lower()
+        
+        # Comprehensive timeframe patterns with priority
+        timeframe_patterns = [
+            # Current periods (highest priority)
+            (['current week', 'this week'], 'current_week'),
+            (['current month', 'this month'], 'current_month'),
+            (['current quarter', 'this quarter'], 'current_quarter'),
+            (['current year', 'this year'], 'current_year'),
+            
+            # Last periods (high priority)
+            (['last week', 'past week', 'previous week'], 'last_week'),
+            (['last month', 'past month', 'previous month'], 'last_month'),
+            (['last quarter', 'past quarter', 'previous quarter'], 'last_quarter'),
+            (['last year', 'past year', 'previous year'], 'last_year'),
+            
+            # Specific day counts (medium priority)
+            (['last 7 days', 'past 7 days', 'last seven days'], 'last_7_days'),
+            (['last 14 days', 'past 14 days', 'last two weeks'], 'last_14_days'),
+            (['last 30 days', 'past 30 days', 'last thirty days'], 'last_30_days'),
+            (['last 60 days', 'past 60 days', 'last sixty days'], 'last_60_days'),
+            (['last 90 days', 'past 90 days', 'last ninety days'], 'last_90_days'),
+            
+            # Extended periods (lower priority)
+            (['last 3 months', 'past 3 months', 'last three months'], 'last_3_months'),
+            (['last 6 months', 'past 6 months', 'last six months'], 'last_6_months'),
+            (['last 12 months', 'past 12 months', 'last twelve months'], 'last_12_months'),
+            
+            # Recent periods (lowest priority)
+            (['recent', 'recently', 'lately'], 'recent'),
+        ]
+        
+        # Find the best match (earliest occurrence has highest priority)
+        for patterns, timeframe in timeframe_patterns:
+            for pattern in patterns:
+                if pattern in query_lower:
+                    return timeframe
+        
+        return None
+
     def refresh_clients(self):
         """Refresh clients - simplified for OpenAI (no token refresh needed)"""
         try:
@@ -1855,10 +1976,8 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
                 # Add generic questions if we don't have enough
                 generic_questions = [
                     "What were the key decisions made in these meetings?",
-                    "Who are the main stakeholders involved?",
                     "What are the next steps mentioned?",
-                    "Are there any deadlines or milestones discussed?",
-                    "What challenges or issues were identified?"
+                    "Are there any deadlines or milestones discussed?"
                 ]
                 questions.extend(generic_questions[:5-len(questions)])
             
@@ -1869,10 +1988,8 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
             # Return default follow-up questions
             return [
                 "What were the main decisions made in the meetings?",
-                "Who are the key participants mentioned?",
                 "What are the upcoming deadlines or milestones?",
-                "Are there any action items assigned?",
-                "What challenges were discussed?"
+                "Are there any action items assigned?"
             ]
     
     def get_meeting_statistics(self) -> Dict[str, Any]:
@@ -1911,20 +2028,7 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
                     "earliest": date_range[0] if date_range[0] else "N/A",
                     "latest": date_range[1] if date_range[1] else "N/A"
                 },
-                "meetings_per_month": monthly_counts,
-                "openai_integration": {
-                    "environment": "OpenAI API",
-                    "llm_model": "gpt-4o",
-                    "embedding_model": "text-embedding-3-large",
-                    "vector_database": "FAISS + SQLite",
-                    "search_type": "Hybrid (Semantic + Keyword)"
-                },
-                "processing_summary": {
-                    "chunk_size": self.text_splitter._chunk_size,
-                    "chunk_overlap": self.text_splitter._chunk_overlap,
-                    "database_path": self.vector_db.db_path,
-                    "index_path": self.vector_db.index_path
-                }
+                "meetings_per_month": monthly_counts
             }
             
             return stats
@@ -2133,25 +2237,20 @@ Participants: {chunk['participants']}
         
         return "\n".join(formatted_content)
 
+    
+
 def main():
     """Main function for Meeting Document AI System with OpenAI"""
     
-    print("🚀 Meeting Document AI System v3.0 (OpenAI Edition)")
-    print("📊 Features: Vector Database, Hybrid Search, Chunking Support")
-    print("🔑 Using OpenAI API (GPT-4o + text-embedding-3-large)")
-    print("=" * 60)
+    pass
     
     try:
         # Check OpenAI API key
         if not openai_api_key:
-            print("❌ Error: OPENAI_API_KEY environment variable not set")
-            print("💡 Please set your OpenAI API key:")
-            print("   export OPENAI_API_KEY='your-api-key-here'")
+            pass
             return
         
-        print("🔐 OpenAI API key found")
-        print(f"🏢 Project ID: {project_id}")
-        print("✅ OpenAI authentication configured")
+        pass
         
         processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)
         
@@ -2196,14 +2295,7 @@ def main():
             if 'date_range' in stats:
                 print(f"📅 Date range: {stats['date_range']['earliest']} to {stats['date_range']['latest']}")
             
-            openai_info = stats.get('openai_integration', {})
-            print(f"🤖 LLM Model: {openai_info.get('llm_model', 'Unknown')}")
-            print(f"🔗 Embedding Model: {openai_info.get('embedding_model', 'Unknown')}")
-            print(f"🔍 Search Type: {openai_info.get('search_type', 'Unknown')}")
-            
-            processing_info = stats.get('processing_summary', {})
-            print(f"📦 Chunk size: {processing_info.get('chunk_size', 0)} chars")
-            print(f"🔄 Chunk overlap: {processing_info.get('chunk_overlap', 0)} chars")
+            # AI Configuration details removed from display
         
         # Interactive query loop
         print("\n🎯 Interactive Query Session")
@@ -2215,8 +2307,6 @@ def main():
             "What are the main topics from recent meetings?",
             "Tell me about the AI integration progress across all meetings",
             "What are our upcoming deadlines and action items?",
-            "Who are the key participants in recent discussions?",
-            "What challenges or blockers have been identified?",
             "Summarize all migration plans discussed"
         ]
         

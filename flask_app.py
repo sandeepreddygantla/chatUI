@@ -41,7 +41,15 @@ app = Flask(__name__,
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session
+
+# Enhanced session configuration for persistence
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 30 day session
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # 30 day remember me
+app.config['REMEMBER_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
 # Configure Flask-Login
 login_manager = LoginManager()
@@ -80,6 +88,12 @@ def initialize_processor():
     try:
         logger.info("Initializing Enhanced Meeting Document Processor...")
         processor = EnhancedMeetingDocumentProcessor(chunk_size=1000, chunk_overlap=200)
+        
+        # Clean up expired sessions on startup
+        if processor and processor.vector_db:
+            cleaned_count = processor.vector_db.cleanup_expired_sessions()
+            logger.info(f"Cleaned up {cleaned_count} expired sessions on startup")
+        
         logger.info("Processor initialized successfully")
         return True
     except Exception as e:
@@ -162,9 +176,10 @@ def login():
         if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
             return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
         
-        # Login user
+        # Login user with permanent session
         flask_user = User(user.user_id, user.username, user.email, user.full_name)
         login_user(flask_user, remember=True)
+        session.permanent = True  # Make session permanent
         
         # Update last login
         processor.vector_db.update_user_last_login(user.user_id)
@@ -196,25 +211,44 @@ def logout():
 
 @app.route('/api/auth/status')
 def auth_status():
-    """Check authentication status"""
-    if current_user.is_authenticated:
-        return jsonify({
-            'authenticated': True,
-            'user': {
-                'user_id': current_user.user_id,
-                'username': current_user.username,
-                'email': current_user.email,
-                'full_name': current_user.full_name
-            }
-        })
-    else:
-        return jsonify({'authenticated': False}), 401
+    """Check authentication status and validate session"""
+    try:
+        if current_user.is_authenticated:
+            # Validate that the user still exists in the database
+            if processor:
+                user = processor.vector_db.get_user_by_id(current_user.user_id)
+                if user and user.is_active:
+                    # Extend session on successful validation
+                    session.permanent = True
+                    
+                    return jsonify({
+                        'authenticated': True,
+                        'user': {
+                            'user_id': current_user.user_id,
+                            'username': current_user.username,
+                            'email': current_user.email,
+                            'full_name': current_user.full_name
+                        }
+                    })
+                else:
+                    # User no longer exists or is inactive - logout
+                    logout_user()
+                    return jsonify({'authenticated': False, 'reason': 'user_inactive'}), 401
+            else:
+                # Processor not available - return unauthenticated
+                return jsonify({'authenticated': False, 'reason': 'system_unavailable'}), 401
+        else:
+            return jsonify({'authenticated': False, 'reason': 'not_logged_in'}), 401
+            
+    except Exception as e:
+        logger.error(f"Auth status check error: {e}")
+        return jsonify({'authenticated': False, 'reason': 'validation_error'}), 401
 
 @app.route('/')
 def index():
-    """Main chat interface"""
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
+    """Main chat interface - authentication handled by frontend"""
+    # Let the frontend handle authentication check to support persistent sessions
+    # This prevents immediate redirect on page refresh, allowing JS to validate session
     return render_template('chat.html')
 
 @app.route('/api/upload', methods=['POST'])
@@ -739,13 +773,9 @@ if __name__ == '__main__':
     
     # Initialize processor
     if initialize_processor():
-        print("Starting UHG Meeting Document AI Flask Server...")
-        print("Access the application at: http://localhost:5000")
-        print("All static files found and configured")
-        print("Test the system at: http://localhost:5000/api/test")
+        pass
         
         # Run the Flask app
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=5000, debug=False)
     else:
-        print("Failed to initialize processor. Please check your configuration.")
-        print("Make sure meeting_processor.py is available and working.")
+        pass
