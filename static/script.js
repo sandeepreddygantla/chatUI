@@ -1886,6 +1886,11 @@ async function loadMeetings() {
 // Load available folders from documents
 async function loadFolders() {
     try {
+        // Ensure projects are loaded first
+        if (!availableProjects || availableProjects.length === 0) {
+            await loadProjects();
+        }
+        
         const response = await fetch('/api/documents');
         if (response.ok) {
             const data = await response.json();
@@ -1912,7 +1917,14 @@ async function loadFolders() {
                     
                     
                     const projectFolders = Object.keys(projectGroups).map((projectId, index) => {
-                        const folderName = projectId === 'default' ? 'Default Folder' : `Project ${index + 1}`;
+                        let folderName;
+                        if (projectId === 'default') {
+                            folderName = 'Default Folder';
+                        } else {
+                            // Find the actual project name from availableProjects
+                            const project = availableProjects.find(p => p.project_id === projectId);
+                            folderName = project ? project.project_name : `Project ${index + 1}`;
+                        }
                         return {
                             folder_path: `user_folder/project_${projectId}`,
                             folder_name: folderName,

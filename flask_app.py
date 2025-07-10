@@ -523,7 +523,7 @@ def chat():
                     meeting_ids=meeting_ids,
                     date_filters=date_filters,
                     folder_path=folder_path,
-                    context_limit=10, 
+                    context_limit=25, 
                     include_context=True
                 )
                 logger.info(f"Response generated, length: {len(response)}")

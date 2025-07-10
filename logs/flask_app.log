@@ -1338,3 +1338,80 @@
 2025-07-09 21:02:09,493 - __main__ - INFO - Projects request received
 2025-07-09 21:02:09,500 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 21:02:09] "GET /api/projects HTTP/1.1" 200 -
 2025-07-09 21:02:15,203 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 21:02:15] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-09 21:11:21,562 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 21:11:21] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 00:11:57,257 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET / HTTP/1.1" 200 -
+2025-07-10 00:11:57,506 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-10 00:11:57,596 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-10 00:11:57,597 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-10 00:11:57,687 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 00:11:57,915 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-10 00:11:57,915 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/test HTTP/1.1" 200 -
+2025-07-10 00:11:57,919 - __main__ - INFO - Stats request received
+2025-07-10 00:11:57,919 - __main__ - INFO - Stats generated successfully
+2025-07-10 00:11:57,919 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 00:11:57,919 - __main__ - INFO - Documents request received
+2025-07-10 00:11:57,925 - __main__ - INFO - Projects request received
+2025-07-10 00:11:57,928 - __main__ - INFO - Meetings request received
+2025-07-10 00:11:57,928 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 00:11:57,929 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/projects HTTP/1.1" 200 -
+2025-07-10 00:11:57,930 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:57] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-10 00:11:58,002 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:58] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 00:11:58,226 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:58] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-10 00:11:58,226 - __main__ - INFO - Stats request received
+2025-07-10 00:11:58,226 - __main__ - INFO - Documents request received
+2025-07-10 00:11:58,226 - __main__ - INFO - Stats generated successfully
+2025-07-10 00:11:58,226 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:58] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 00:11:58,226 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 00:11:58,548 - __main__ - INFO - Documents request received
+2025-07-10 00:11:58,551 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 00:11:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 08:34:57,749 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:57] "GET / HTTP/1.1" 200 -
+2025-07-10 08:34:57,951 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:57] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-10 08:34:58,084 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-10 08:34:58,084 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-10 08:34:58,182 - __main__ - INFO - Stats request received
+2025-07-10 08:34:58,182 - __main__ - INFO - Stats generated successfully
+2025-07-10 08:34:58,192 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 08:34:58,414 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-10 08:34:58,414 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/test HTTP/1.1" 200 -
+2025-07-10 08:34:58,429 - __main__ - INFO - Documents request received
+2025-07-10 08:34:58,430 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 08:34:58,430 - __main__ - INFO - Projects request received
+2025-07-10 08:34:58,430 - __main__ - INFO - Meetings request received
+2025-07-10 08:34:58,430 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 08:34:58,430 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/projects HTTP/1.1" 200 -
+2025-07-10 08:34:58,445 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-10 08:34:58,496 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-10 08:34:58,762 - __main__ - INFO - Documents request received
+2025-07-10 08:34:58,762 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 08:34:58,762 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 08:34:59,089 - __main__ - INFO - Documents request received
+2025-07-10 08:34:59,101 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 08:34:59] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 10:41:08,308 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET / HTTP/1.1" 200 -
+2025-07-10 10:41:08,570 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-10 10:41:08,630 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-10 10:41:08,646 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-10 10:41:08,726 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 10:41:08,949 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-10 10:41:08,949 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/test HTTP/1.1" 200 -
+2025-07-10 10:41:08,949 - __main__ - INFO - Stats request received
+2025-07-10 10:41:08,959 - __main__ - INFO - Documents request received
+2025-07-10 10:41:08,959 - __main__ - INFO - Stats generated successfully
+2025-07-10 10:41:08,960 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 10:41:08,960 - __main__ - INFO - Meetings request received
+2025-07-10 10:41:08,961 - __main__ - INFO - Projects request received
+2025-07-10 10:41:08,961 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 10:41:08,963 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-10 10:41:08,963 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:08] "GET /api/projects HTTP/1.1" 200 -
+2025-07-10 10:41:09,040 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-10 10:41:09,272 - __main__ - INFO - Projects request received
+2025-07-10 10:41:09,272 - __main__ - INFO - Stats request received
+2025-07-10 10:41:09,272 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-10 10:41:09,272 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/projects HTTP/1.1" 200 -
+2025-07-10 10:41:09,272 - __main__ - INFO - Stats generated successfully
+2025-07-10 10:41:09,272 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 10:41:09,587 - __main__ - INFO - Projects request received
+2025-07-10 10:41:09,598 - __main__ - INFO - Documents request received
+2025-07-10 10:41:09,598 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/projects HTTP/1.1" 200 -
+2025-07-10 10:41:09,602 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 10:41:09,923 - __main__ - INFO - Documents request received
+2025-07-10 10:41:09,923 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/documents HTTP/1.1" 200 -

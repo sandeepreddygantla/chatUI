@@ -836,16 +836,25 @@ class VectorDatabase:
         conn.close()
         return documents
     
-    def get_user_documents_by_scope(self, user_id: str, project_id: str = None, meeting_id: str = None) -> List[str]:
-        """Get document IDs for a user filtered by project or meeting"""
+    def get_user_documents_by_scope(self, user_id: str, project_id: str = None, meeting_id: Union[str, List[str]] = None) -> List[str]:
+        """Get document IDs for a user filtered by project or meeting(s)"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         if meeting_id:
-            cursor.execute('''
-                SELECT document_id FROM documents 
-                WHERE user_id = ? AND meeting_id = ?
-            ''', (user_id, meeting_id))
+            if isinstance(meeting_id, list):
+                # Handle multiple meeting IDs
+                placeholders = ','.join(['?' for _ in meeting_id])
+                cursor.execute(f'''
+                    SELECT document_id FROM documents 
+                    WHERE user_id = ? AND meeting_id IN ({placeholders})
+                ''', [user_id] + meeting_id)
+            else:
+                # Handle single meeting ID
+                cursor.execute('''
+                    SELECT document_id FROM documents 
+                    WHERE user_id = ? AND meeting_id = ?
+                ''', (user_id, meeting_id))
         elif project_id:
             cursor.execute('''
                 SELECT document_id FROM documents 
@@ -861,7 +870,7 @@ class VectorDatabase:
         conn.close()
         return document_ids
     
-    def get_user_documents_by_folder(self, user_id: str, folder_path: str, project_id: str = None, meeting_id: str = None) -> List[str]:
+    def get_user_documents_by_folder(self, user_id: str, folder_path: str, project_id: str = None, meeting_id: Union[str, List[str]] = None) -> List[str]:
         """Get document IDs for a user filtered by folder path"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -870,8 +879,15 @@ class VectorDatabase:
         params = [user_id, folder_path]
         
         if meeting_id:
-            conditions.append("meeting_id = ?")
-            params.append(meeting_id)
+            if isinstance(meeting_id, list):
+                # Handle multiple meeting IDs
+                placeholders = ','.join(['?' for _ in meeting_id])
+                conditions.append(f"meeting_id IN ({placeholders})")
+                params.extend(meeting_id)
+            else:
+                # Handle single meeting ID
+                conditions.append("meeting_id = ?")
+                params.append(meeting_id)
         elif project_id:
             conditions.append("project_id = ?")
             params.append(project_id)
@@ -885,7 +901,7 @@ class VectorDatabase:
         conn.close()
         return document_ids
     
-    def keyword_search_chunks_by_user(self, keywords: List[str], user_id: str, project_id: str = None, meeting_id: str = None, limit: int = 50) -> List[str]:
+    def keyword_search_chunks_by_user(self, keywords: List[str], user_id: str, project_id: str = None, meeting_id: Union[str, List[str]] = None, limit: int = 50) -> List[str]:
         """Perform keyword search on chunk content filtered by user/project/meeting"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -909,8 +925,15 @@ class VectorDatabase:
             additional_conditions.append("project_id = ?")
             params.append(project_id)
         if meeting_id:
-            additional_conditions.append("meeting_id = ?")
-            params.append(meeting_id)
+            if isinstance(meeting_id, list):
+                # Handle multiple meeting IDs
+                placeholders = ','.join(['?' for _ in meeting_id])
+                additional_conditions.append(f"meeting_id IN ({placeholders})")
+                params.extend(meeting_id)
+            else:
+                # Handle single meeting ID
+                additional_conditions.append("meeting_id = ?")
+                params.append(meeting_id)
         
         where_clause = f"({' OR '.join(search_conditions)}) AND {' AND '.join(additional_conditions)}"
         
@@ -1791,15 +1814,35 @@ class EnhancedMeetingDocumentProcessor:
         # Handle enhanced @ mention filters
         if meeting_ids:
             logger.info(f"Enhanced meeting filters: {meeting_ids}")
-            # TODO: Implement support for multiple meeting IDs
-            # For now, use the first meeting ID
+            # Support for multiple meeting IDs - use all provided meeting IDs
             if meeting_ids and not meeting_id:
-                meeting_id = meeting_ids[0]
+                # Use all meeting IDs for document retrieval
+                meeting_id = meeting_ids  # Pass the full list instead of just first one
         
         if date_filters:
             logger.info(f"Date filters: {date_filters}")
-            # TODO: Implement date filtering logic
-            # For now, we'll rely on natural language processing in the query
+            # Apply explicit date filtering using existing timeframe logic
+            date_filtered_docs = []
+            for date_filter in date_filters:
+                try:
+                    # Use existing timeframe detection and date filtering
+                    timeframe_docs = self.get_documents_by_timeframe(date_filter, user_id)
+                    # Extract document IDs from MeetingDocument objects
+                    filtered_doc_ids = [doc.document_id for doc in timeframe_docs]
+                    date_filtered_docs.extend(filtered_doc_ids)
+                    logger.info(f"Date filter '{date_filter}' matched {len(filtered_doc_ids)} documents")
+                except Exception as e:
+                    logger.warning(f"Error applying date filter '{date_filter}': {e}")
+            
+            # Remove duplicates and use date-filtered documents
+            if date_filtered_docs:
+                date_filtered_docs = list(set(date_filtered_docs))
+                if not document_ids:
+                    document_ids = date_filtered_docs
+                else:
+                    # Intersect with existing document filters
+                    document_ids = list(set(document_ids) & set(date_filtered_docs))
+                logger.info(f"Applied date filters, now using {len(document_ids)} documents")
         
         # If no specific documents are provided, include all user documents
         if not document_ids:
