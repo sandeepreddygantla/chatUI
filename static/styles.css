@@ -1729,16 +1729,19 @@ body {
 /* Enhanced table responsiveness */
 .assistant .message-content .markdown-table {
     overflow-x: auto;
-    display: block;
-    white-space: nowrap;
+    display: table;
+    table-layout: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.assistant .message-content .markdown-table thead,
-.assistant .message-content .markdown-table tbody,
-.assistant .message-content .markdown-table tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+.assistant .message-content .markdown-table th,
+.assistant .message-content .markdown-table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 200px;
+    min-width: 100px;
 }
 
 /* Better spacing for consecutive elements */
@@ -1974,6 +1977,14 @@ html, body {
     .assistant .message-content .markdown-table {
         font-size: 12px;
         overflow-x: auto;
+    }
+    
+    .assistant .message-content .markdown-table th,
+    .assistant .message-content .markdown-table td {
+        padding: 6px 8px;
+        max-width: 150px;
+        font-size: 11px;
+        min-width: 80px;
     }
 
     .assistant .message-content .markdown-heading {

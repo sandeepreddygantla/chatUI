@@ -1415,3 +1415,26 @@
 2025-07-10 10:41:09,602 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/documents HTTP/1.1" 200 -
 2025-07-10 10:41:09,923 - __main__ - INFO - Documents request received
 2025-07-10 10:41:09,923 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 10:41:09] "GET /api/documents HTTP/1.1" 200 -
+2025-07-10 12:00:35,762 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:35] "GET / HTTP/1.1" 200 -
+2025-07-10 12:00:35,829 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:35] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-10 12:00:35,830 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:35] "GET /static/icons/Optum-logo.png HTTP/1.1" 200 -
+2025-07-10 12:00:35,936 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:35] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-10 12:00:36,779 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[31m[1mGET /api/auth/status HTTP/1.1[0m" 401 -
+2025-07-10 12:00:36,783 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/stats HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,824 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-10 12:00:36,824 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /api/test HTTP/1.1" 200 -
+2025-07-10 12:00:36,824 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/documents HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,830 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/projects HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,835 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[31m[1mGET /api/auth/status HTTP/1.1[0m" 401 -
+2025-07-10 12:00:36,835 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/meetings HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,858 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login HTTP/1.1" 200 -
+2025-07-10 12:00:36,955 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/stats HTTP/1.1" 200 -
+2025-07-10 12:00:36,962 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/documents HTTP/1.1" 200 -
+2025-07-10 12:00:36,964 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/projects HTTP/1.1" 200 -
+2025-07-10 12:00:36,966 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/meetings HTTP/1.1" 200 -
+2025-07-10 12:00:36,969 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login HTTP/1.1" 200 -
+2025-07-10 12:00:36,969 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/stats HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,979 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[32mGET /api/documents HTTP/1.1[0m" 302 -
+2025-07-10 12:00:36,986 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/stats HTTP/1.1" 200 -
+2025-07-10 12:00:36,986 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-10 12:00:37,114 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:37] "GET /static/icons/favicon.png HTTP/1.1" 200 -
