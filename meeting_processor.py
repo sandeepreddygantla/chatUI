@@ -1452,7 +1452,117 @@ class EnhancedMeetingDocumentProcessor:
                     return timeframe
         
         return None
+    
+    def _generate_date_based_summary(self, query: str, documents: List[Any], timeframe: str, include_context: bool = False) -> Union[str, Tuple[str, str]]:
+        """Generate intelligent date-based summary with chronological organization"""
+        logger.info(f"Generating date-based summary for {len(documents)} documents in {timeframe} timeframe")
+        
+        # Sort documents by date
+        sorted_docs = sorted(documents, key=lambda x: x.date)
+        
+        # Group documents by date for better organization
+        from collections import defaultdict
+        date_groups = defaultdict(list)
+        for doc in sorted_docs:
+            date_key = doc.date.strftime('%Y-%m-%d')
+            date_groups[date_key].append(doc)
+        
+        # Build comprehensive context from all documents
+        context_parts = []
+        document_summaries = []
+        
+        for date_key, docs in sorted(date_groups.items()):
+            date_formatted = datetime.strptime(date_key, '%Y-%m-%d').strftime('%B %d, %Y')
+            context_parts.append(f"\n=== {date_formatted} ===")
+            
+            for doc in docs:
+                # Add document summary
+                doc_summary = f"Document: {doc.filename}\n"
+                if doc.content_summary:
+                    doc_summary += f"Summary: {doc.content_summary}\n"
+                if doc.main_topics:
+                    doc_summary += f"Main Topics: {', '.join(doc.main_topics)}\n"
+                if doc.participants:
+                    doc_summary += f"Participants: {', '.join(doc.participants)}\n"
+                if doc.future_actions:
+                    doc_summary += f"Action Items: {', '.join(doc.future_actions)}\n"
+                
+                context_parts.append(doc_summary)
+                document_summaries.append(doc_summary)
+        
+        # Create comprehensive context
+        full_context = '\n'.join(context_parts)
+        
+        # Generate summary prompt based on query type
+        timeframe_display = timeframe.replace('_', ' ').title()
+        summary_prompt = f"""
+        Based on the meeting documents from {timeframe_display}, please provide a comprehensive summary that addresses the user's request: "{query}"
 
+        Please organize your response to include:
+        1. **Overview**: High-level summary of activities during this period
+        2. **Key Decisions**: Important decisions made during meetings
+        3. **Action Items**: Tasks and follow-ups identified
+        4. **Participants**: Key people involved across meetings
+        5. **Timeline**: Chronological progression of events
+        6. **Outstanding Issues**: Any unresolved matters
+
+        Meeting Documents Context:
+        {full_context}
+
+        Provide a well-structured response that gives the user a clear understanding of what happened during {timeframe_display}.
+        """
+        
+        try:
+            # Get LLM response
+            llm = get_llm()
+            messages = [
+                SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
+                HumanMessage(content=summary_prompt)
+            ]
+            
+            response = llm.invoke(messages)
+            summary_response = response.content.strip()
+            
+            # Add timeframe context to the response
+            final_response = f"**Summary for {timeframe_display}** ({len(documents)} documents)\n\n{summary_response}"
+            
+            if include_context:
+                return final_response, full_context
+            else:
+                return final_response
+                
+        except Exception as e:
+            logger.error(f"Error generating date-based summary: {e}")
+            # Enhanced fallback using stored content summaries
+            fallback_parts = [f"**Summary for {timeframe_display}** ({len(documents)} documents)\n"]
+            
+            for date_key, docs in sorted(date_groups.items()):
+                date_formatted = datetime.strptime(date_key, '%Y-%m-%d').strftime('%B %d, %Y')
+                fallback_parts.append(f"\n**{date_formatted}:**")
+                
+                for doc in docs:
+                    fallback_parts.append(f"\n• **{doc.filename}**")
+                    
+                    # Include actual content summary if available
+                    if doc.content_summary:
+                        fallback_parts.append(f"  {doc.content_summary}")
+                    
+                    # Include main topics if available  
+                    if doc.main_topics:
+                        topics_str = ', '.join(doc.main_topics[:3])  # First 3 topics
+                        fallback_parts.append(f"  *Topics: {topics_str}*")
+                    
+                    # Include participants if available
+                    if doc.participants:
+                        participants_str = ', '.join(doc.participants[:3])  # First 3 participants
+                        fallback_parts.append(f"  *Participants: {participants_str}*")
+            
+            fallback_summary = '\n'.join(fallback_parts)
+            
+            if include_context:
+                return fallback_summary, full_context
+            else:
+                return fallback_summary
     def refresh_clients(self):
         """Refresh clients - simplified for OpenAI (no token refresh needed)"""
         try:
