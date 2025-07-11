@@ -736,14 +736,13 @@ class VectorDatabase:
         """
         
         try:
-            # Get LLM response
-            llm = get_llm()
+            # Use class LLM instance
             messages = [
                 SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
                 HumanMessage(content=summary_prompt)
             ]
             
-            response = llm.invoke(messages)
+            response = self.llm.invoke(messages)
             summary_response = response.content.strip()
             
             # Add timeframe context to the response
@@ -1513,14 +1512,13 @@ class EnhancedMeetingDocumentProcessor:
         """
         
         try:
-            # Get LLM response
-            llm = get_llm()
+            # Use class LLM instance
             messages = [
                 SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
                 HumanMessage(content=summary_prompt)
             ]
             
-            response = llm.invoke(messages)
+            response = self.llm.invoke(messages)
             summary_response = response.content.strip()
             
             # Add timeframe context to the response
