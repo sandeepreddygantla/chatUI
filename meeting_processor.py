@@ -2127,7 +2127,7 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
             logger.info(f"Processing {total_files} files with flexible approach for query: '{query}'")
             
             # Smart content selection based on file count
-            if total_files <= 15:
+            if total_files <= 20:
                 # Small projects: Use detailed content from all files
                 content_chunks = self._get_detailed_content_from_all_files(documents)
                 processing_note = f"Analyzed all {total_files} files individually"
