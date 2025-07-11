@@ -1438,3 +1438,39 @@
 2025-07-10 12:00:36,986 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "GET /login?next=/api/stats HTTP/1.1" 200 -
 2025-07-10 12:00:36,986 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:36] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
 2025-07-10 12:00:37,114 - werkzeug - INFO - 127.0.0.1 - - [10/Jul/2025 12:00:37] "GET /static/icons/favicon.png HTTP/1.1" 200 -
+2025-07-11 14:07:57,236 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET / HTTP/1.1" 200 -
+2025-07-11 14:07:57,475 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-11 14:07:57,570 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-11 14:07:57,571 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-11 14:07:57,671 - __main__ - INFO - Stats request received
+2025-07-11 14:07:57,671 - __main__ - INFO - Stats generated successfully
+2025-07-11 14:07:57,671 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/stats HTTP/1.1" 200 -
+2025-07-11 14:07:57,890 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 4}
+2025-07-11 14:07:57,890 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/test HTTP/1.1" 200 -
+2025-07-11 14:07:57,901 - __main__ - INFO - Projects request received
+2025-07-11 14:07:57,905 - __main__ - INFO - Meetings request received
+2025-07-11 14:07:57,906 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-11 14:07:57,906 - __main__ - INFO - Documents request received
+2025-07-11 14:07:57,908 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/projects HTTP/1.1" 200 -
+2025-07-11 14:07:57,908 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-11 14:07:57,908 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "GET /api/documents HTTP/1.1" 200 -
+2025-07-11 14:07:57,985 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:57] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-11 14:07:58,225 - __main__ - INFO - Projects request received
+2025-07-11 14:07:58,233 - __main__ - INFO - Documents request received
+2025-07-11 14:07:58,235 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:58] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-11 14:07:58,239 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:58] "GET /api/projects HTTP/1.1" 200 -
+2025-07-11 14:07:58,241 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-11 14:07:58,557 - __main__ - INFO - Documents request received
+2025-07-11 14:07:58,558 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:07:58] "GET /api/documents HTTP/1.1" 200 -
+2025-07-11 14:08:02,544 - __main__ - INFO - Chat request received: Summarize all meetings...
+2025-07-11 14:08:02,544 - __main__ - INFO - Vector database size: 4
+2025-07-11 14:08:02,549 - __main__ - INFO - Generating response using processor
+2025-07-11 14:08:02,549 - meeting_processor - INFO - Detected comprehensive project summary query
+2025-07-11 14:08:02,549 - meeting_processor - INFO - Generating user-centric comprehensive answer for user user_20250709_194715_sgantla001, project None
+2025-07-11 14:08:02,552 - meeting_processor - INFO - Found 1 files to process for user query: 'Summarize all meetings'
+2025-07-11 14:08:02,552 - meeting_processor - INFO - Processing 1 files with flexible approach for query: 'Summarize all meetings'
+2025-07-11 14:08:05,902 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-11 14:08:05,944 - __main__ - INFO - Response generated, length: 757
+2025-07-11 14:08:08,391 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-11 14:08:08,411 - __main__ - INFO - Generated 5 follow-up questions
+2025-07-11 14:08:08,411 - werkzeug - INFO - 127.0.0.1 - - [11/Jul/2025 14:08:08] "POST /api/chat HTTP/1.1" 200 -
