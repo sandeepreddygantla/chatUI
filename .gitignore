@@ -41,3 +41,5 @@ venv/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+meeting_documents/

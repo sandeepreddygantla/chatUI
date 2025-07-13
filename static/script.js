@@ -1556,16 +1556,18 @@ function parseMessageForDocuments(message) {
             case 'folder_files':
             case 'folder_selected':
                 // Case-insensitive folder lookup
+                console.log(`Looking for folder: "${mention.value}"`);
+                console.log('Available folders:', availableFolders.map(f => ({ name: f.display_name, path: f.folder_path })));
+                
                 const folder = availableFolders.find(f => 
                     f.display_name.toLowerCase() === mention.value.toLowerCase()
                 );
                 if (folder) {
                     filterData.folderPath = folder.folder_path;
-                    console.log('Found folder:', folder.display_name, 'Path:', folder.folder_path);
+                    console.log('✅ Found folder:', folder.display_name, 'Path:', folder.folder_path);
                 } else {
-                    console.log('Folder not found:', mention.value);
-                    console.log('Available folders:', availableFolders.map(f => f.display_name));
-                    console.log('Folder objects:', availableFolders);
+                    console.log('❌ Folder not found:', mention.value);
+                    console.log('Available folder names:', availableFolders.map(f => f.display_name));
                 }
                 break;
             case 'file':
@@ -1919,7 +1921,7 @@ async function loadFolders() {
                 // Extract unique folder paths from documents
                 console.log('All documents in loadFolders:', data.documents);
                 data.documents.forEach((doc, i) => {
-                    console.log(`Doc ${i}: ${doc.filename}, folder_path: "${doc.folder_path}" (type: ${typeof doc.folder_path})`);
+                    console.log(`Doc ${i}: ${doc.filename}, folder_path: "${doc.folder_path}" (type: ${typeof doc.folder_path}), project: ${doc.project_name}`);
                 });
                 
                 const docsWithFolders = data.documents.filter(doc => doc.folder_path);

@@ -456,6 +456,37 @@ class VectorDatabase:
         
         return results
     
+    def search_similar_chunks_by_folder(self, query_embedding: np.ndarray, user_id: str, folder_path: str, top_k: int = 20) -> List[Tuple[str, float]]:
+        """Search for similar chunks using FAISS, filtered by folder"""
+        if self.index.ntotal == 0:
+            return []
+        
+        # First get all chunks from semantic search
+        all_results = self.search_similar_chunks(query_embedding, top_k * 3)  # Get more to filter
+        logger.info(f"🔍 SEMANTIC SEARCH: Got {len(all_results)} chunks before folder filtering")
+        
+        # Filter results by folder
+        filtered_results = []
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        for chunk_id, similarity in all_results:
+            # Check if this chunk belongs to a document in the specified folder
+            cursor.execute('''
+                SELECT 1 FROM chunks c
+                JOIN documents d ON c.document_id = d.document_id
+                WHERE c.chunk_id = ? AND d.user_id = ? AND d.folder_path = ?
+            ''', (chunk_id, user_id, folder_path))
+            
+            if cursor.fetchone():
+                filtered_results.append((chunk_id, similarity))
+                if len(filtered_results) >= top_k:
+                    break
+        
+        conn.close()
+        logger.info(f"🔍 SEMANTIC SEARCH: Filtered to {len(filtered_results)} chunks in folder '{folder_path}'")
+        return filtered_results
+    
     def get_chunks_by_ids(self, chunk_ids: List[str]) -> List[DocumentChunk]:
         """Retrieve chunks by their IDs"""
         if not chunk_ids:
@@ -942,6 +973,40 @@ class VectorDatabase:
         chunk_ids = [row[0] for row in cursor.fetchall()]
         
         conn.close()
+        return chunk_ids
+    
+    def keyword_search_chunks_by_folder(self, keywords: List[str], user_id: str, folder_path: str, limit: int = 50) -> List[str]:
+        """Perform keyword search on chunk content filtered by user and folder"""
+        logger.info(f"🔍 KEYWORD SEARCH: Searching for {keywords} in folder '{folder_path}'")
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Build search conditions
+        search_conditions = []
+        params = []
+        
+        # Add keyword conditions
+        for keyword in keywords:
+            search_conditions.append("c.content LIKE ?")
+            params.append(f"%{keyword}%")
+        
+        # Add user and folder filters
+        where_clause = f"({' OR '.join(search_conditions)}) AND d.user_id = ? AND d.folder_path = ?"
+        params.extend([user_id, folder_path])
+        
+        query = f'''
+            SELECT c.chunk_id FROM chunks c
+            JOIN documents d ON c.document_id = d.document_id
+            WHERE {where_clause}
+            LIMIT ?
+        '''
+        params.append(limit)
+        
+        cursor.execute(query, params)
+        chunk_ids = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        logger.info(f"🔍 KEYWORD SEARCH: Found {len(chunk_ids)} chunks in folder '{folder_path}'")
         return chunk_ids
     
     # User Management Methods
@@ -1844,7 +1909,7 @@ class EnhancedMeetingDocumentProcessor:
             self.vector_db.save_index()
             logger.info(f"Successfully processed {processed_count} documents")
     
-    def hybrid_search(self, query: str, user_id: str, project_id: str = None, meeting_id: str = None, top_k: int = 15, semantic_weight: float = 0.7) -> List[DocumentChunk]:
+    def hybrid_search(self, query: str, user_id: str, project_id: str = None, meeting_id: str = None, folder_path: str = None, top_k: int = 15, semantic_weight: float = 0.7) -> List[DocumentChunk]:
         """Perform hybrid search combining semantic and keyword search"""
         
         # Extract keywords from query
@@ -1853,13 +1918,20 @@ class EnhancedMeetingDocumentProcessor:
         # Semantic search
         try:
             query_embedding = np.array(self.embedding_model.embed_query(query))
-            semantic_results = self.vector_db.search_similar_chunks(query_embedding, top_k * 2)
+            if folder_path:
+                # Filter semantic search by folder
+                semantic_results = self.vector_db.search_similar_chunks_by_folder(query_embedding, user_id, folder_path, top_k * 2)
+            else:
+                semantic_results = self.vector_db.search_similar_chunks(query_embedding, top_k * 2)
         except Exception as e:
             logger.error(f"Error in semantic search: {e}")
             semantic_results = []
         
         # Keyword search with user context
-        keyword_chunk_ids = self.vector_db.keyword_search_chunks_by_user(keywords, user_id, project_id, meeting_id, top_k)
+        if folder_path:
+            keyword_chunk_ids = self.vector_db.keyword_search_chunks_by_folder(keywords, user_id, folder_path, top_k)
+        else:
+            keyword_chunk_ids = self.vector_db.keyword_search_chunks_by_user(keywords, user_id, project_id, meeting_id, top_k)
         
         # Combine and score results
         chunk_scores = defaultdict(float)
@@ -1949,7 +2021,8 @@ class EnhancedMeetingDocumentProcessor:
             if folder_path:
                 # Use folder-based filtering ONLY - don't mix with project/meeting filters
                 document_ids = self.vector_db.get_user_documents_by_folder(user_id, folder_path)
-                logger.info(f"Including {len(document_ids)} documents from folder {folder_path} for user {user_id}")
+                logger.info(f"🔍 FOLDER FILTERING: Including {len(document_ids)} documents from folder '{folder_path}' for user {user_id}")
+                logger.info(f"🔍 FOLDER FILTERING: Document IDs: {document_ids}")
             else:
                 # Use standard scope-based filtering
                 document_ids = self.vector_db.get_user_documents_by_scope(user_id, project_id, meeting_id)
@@ -1981,11 +2054,16 @@ class EnhancedMeetingDocumentProcessor:
                 return self._generate_date_based_summary(query, timeframe_docs, detected_timeframe, include_context)
         
         # Perform hybrid search
-        relevant_chunks = self.hybrid_search(query, user_id, project_id, meeting_id, top_k=context_limit * 3)
+        if folder_path:
+            logger.info(f"🔍 HYBRID SEARCH: Searching with folder filter '{folder_path}'")
+        relevant_chunks = self.hybrid_search(query, user_id, project_id, meeting_id, folder_path, top_k=context_limit * 3)
+        logger.info(f"🔍 HYBRID SEARCH: Found {len(relevant_chunks)} relevant chunks")
         
         # Filter chunks by document IDs if specified
         if document_ids:
+            original_count = len(relevant_chunks)
             relevant_chunks = [chunk for chunk in relevant_chunks if chunk.document_id in document_ids]
+            logger.info(f"🔍 DOCUMENT FILTERING: Filtered from {original_count} to {len(relevant_chunks)} chunks based on document IDs")
             if not relevant_chunks:
                 error_msg = "I don't have any relevant information in the specified documents for your question."
                 return (error_msg, "") if include_context else error_msg

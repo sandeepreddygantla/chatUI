@@ -2420,3 +2420,73 @@
 2025-07-13 01:31:08,976 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 2025-07-13 01:31:08,976 - __main__ - INFO - Generated 5 follow-up questions
 2025-07-13 01:31:08,976 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:31:08] "POST /api/chat HTTP/1.1" 200 -
+2025-07-13 10:27:25,405 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "GET / HTTP/1.1" 200 -
+2025-07-13 10:27:25,588 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-13 10:27:25,773 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-13 10:27:25,793 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-13 10:27:25,794 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-07-13 10:27:25,870 - __main__ - INFO - Stats request received
+2025-07-13 10:27:25,870 - __main__ - INFO - Stats generated successfully
+2025-07-13 10:27:25,870 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:25] "GET /api/stats HTTP/1.1" 200 -
+2025-07-13 10:27:26,151 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 11}
+2025-07-13 10:27:26,156 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/test HTTP/1.1" 200 -
+2025-07-13 10:27:26,165 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-13 10:27:26,165 - __main__ - INFO - Documents request received
+2025-07-13 10:27:26,171 - __main__ - INFO - Projects request received
+2025-07-13 10:27:26,173 - __main__ - INFO - Meetings request received
+2025-07-13 10:27:26,173 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 10:27:26,173 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 10:27:26,173 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-13 10:27:26,237 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-13 10:27:26,483 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-13 10:27:26,483 - __main__ - INFO - Projects request received
+2025-07-13 10:27:26,489 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 10:27:26,811 - __main__ - INFO - Projects request received
+2025-07-13 10:27:26,811 - __main__ - INFO - Documents request received
+2025-07-13 10:27:26,822 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 10:27:26,823 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:26] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 10:27:27,144 - __main__ - INFO - Documents request received
+2025-07-13 10:27:27,144 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 10:27:27] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 12:03:46,614 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:46] "GET / HTTP/1.1" 200 -
+2025-07-13 12:03:46,750 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:46] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-13 12:03:46,972 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:46] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-13 12:03:46,976 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:46] "GET /static/script.js HTTP/1.1" 200 -
+2025-07-13 12:03:46,977 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:46] "[36mGET /static/icons/Optum-logo.png HTTP/1.1[0m" 304 -
+2025-07-13 12:03:47,067 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-13 12:03:47,368 - __main__ - INFO - Stats request received
+2025-07-13 12:03:47,376 - __main__ - INFO - System test status: {'processor_initialized': True, 'vector_db_available': True, 'vector_size': 11}
+2025-07-13 12:03:47,378 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/test HTTP/1.1" 200 -
+2025-07-13 12:03:47,379 - __main__ - INFO - Stats generated successfully
+2025-07-13 12:03:47,383 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/stats HTTP/1.1" 200 -
+2025-07-13 12:03:47,393 - __main__ - INFO - Documents request received
+2025-07-13 12:03:47,398 - __main__ - INFO - Projects request received
+2025-07-13 12:03:47,399 - __main__ - INFO - Meetings request received
+2025-07-13 12:03:47,400 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/auth/status HTTP/1.1" 200 -
+2025-07-13 12:03:47,404 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 12:03:47,405 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 12:03:47,407 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/meetings HTTP/1.1" 200 -
+2025-07-13 12:03:47,697 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "[36mGET /static/icons/favicon.png HTTP/1.1[0m" 304 -
+2025-07-13 12:03:47,700 - __main__ - INFO - Stats request received
+2025-07-13 12:03:47,708 - __main__ - INFO - Stats generated successfully
+2025-07-13 12:03:47,709 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/stats HTTP/1.1" 200 -
+2025-07-13 12:03:47,717 - __main__ - INFO - Projects request received
+2025-07-13 12:03:47,724 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:47] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 12:03:48,040 - __main__ - INFO - Projects request received
+2025-07-13 12:03:48,041 - __main__ - INFO - Documents request received
+2025-07-13 12:03:48,045 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:48] "GET /api/projects HTTP/1.1" 200 -
+2025-07-13 12:03:48,046 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:48] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 12:03:48,360 - __main__ - INFO - Documents request received
+2025-07-13 12:03:48,364 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:03:48] "GET /api/documents HTTP/1.1" 200 -
+2025-07-13 12:03:58,125 - __main__ - INFO - Chat request received: give me the summary...
+2025-07-13 12:03:58,126 - __main__ - INFO - Folder filter: user_sgantla001/project_Standup
+2025-07-13 12:03:58,127 - __main__ - INFO - Vector database size: 11
+2025-07-13 12:03:58,127 - __main__ - INFO - Generating response using processor
+2025-07-13 12:03:58,128 - meeting_processor - INFO - No specific documents provided, including all user documents
+2025-07-13 12:03:58,131 - meeting_processor - INFO - Found 1 documents in folder user_sgantla001/project_Standup for user user_20250712_141343_sgantla001
+2025-07-13 12:03:58,131 - meeting_processor - INFO - Including 1 documents from folder user_sgantla001/project_Standup for user user_20250712_141343_sgantla001
+2025-07-13 12:03:58,794 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-07-13 12:04:07,979 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-13 12:04:07,995 - __main__ - INFO - Response generated, length: 2876
+2025-07-13 12:04:13,026 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-13 12:04:13,029 - __main__ - INFO - Generated 5 follow-up questions
+2025-07-13 12:04:13,030 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 12:04:13] "POST /api/chat HTTP/1.1" 200 -
