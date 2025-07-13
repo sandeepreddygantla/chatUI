@@ -1,0 +1,27 @@
+Key Topics:
+
+Vendor Migration: The team discussed migrating away from Shutterfly as a vendor. They need to move all content from Shutterfly to other vendors, such as Claudia and Acoustic. 0:04
+Document Composition System: The team reviewed the document composition system currently supported by Shutterfly and discussed migrating to other preferred vendors. 0:25
+Data Flow and Orchestration: The team explained the data flow process, including data enrichment, composition, and delivery through Shutterfly and Salesforce. 1:28
+Migration Initiative: The team emphasized the magnitude of the migration initiative, which involves hundreds of document trails and various templates. 4:18
+Print and Email Vendors: The team decided to use Fiserv for print and Salesforce for email, with the goal of migrating away from Shutterfly. 3:57
+Document Types and Templates: The team discussed the different document types and templates involved in the migration process, highlighting the complexity of the task. 4:32
+Orchestration Systems: The team explored the possibility of using a single orchestration system on multiple systems, depending on the specific needs of each print trail. 9:57
+AI and Automation: The team considered using AI and automation to help with the migration process, including data conversion and rationalization. 12:01
+Team Structure: The team discussed the initial team structure for the migration project, including product managers, QA, change managers, and engineering roles. 20:43
+Follow-Up and Collaboration: The team planned to set up a follow-up meeting and collaborate on the project, sharing files and resources through a Teams space. 29:48
+
+
+---
+
+Key Topics:
+
+Vendor Migration: Unknown Speaker discussed the migration from Shutterfly to other vendors, including the need to move away from Shutterfly’s composition system and e-mail tool Acoustic. 0:04
+Document Flow: Unknown Speaker explained the flow of information from claim systems through data enrichment, composition, and finally to document archival and delivery via Shutterfly and Salesforce. 1:03
+Print and E-mail Vendors: Unknown Speaker clarified that Fiserv is the choice for print and Salesforce for email, with the goal of migrating away from Shutterfly’s composition tool. 3:57
+Document Types and Templates: Unknown Speaker elaborated on the different document types and templates involved in the migration, highlighting the complexity and variations in the system. 4:32
+Provider Communications: Unknown Speaker addressed the inclusion of provider communications in the migration process, noting the need for further refinement and accuracy in the data. 7:01
+Orchestration Systems: Unknown Speaker discussed the role of orchestration systems in the migration, including the potential involvement of Shutterfly and the need to uncover legacy processes. 8:42
+AI and Automation: Unknown Speaker and Unknown Speaker explored the potential use of AI and automation to speed up the migration process, emphasizing the importance of understanding Shutterfly’s role and the final workflow. 15:08
+Team Structure: Unknown Speaker and Unknown Speaker discussed the proposed team structure for the migration project, including the involvement of AI engineers, solution architects, and experienced designers. 22:50
+Follow-up and Collaboration: Unknown Speaker planned to set up a follow-up meeting and share relevant files for review, emphasizing the importance of cross-collaboration and resource allocation. 27:50

@@ -747,6 +747,27 @@ def test_system():
         logger.error(f"Test error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/test_folder_fix')
+@login_required
+def test_folder_fix():
+    """Test if our folder fix is loaded"""
+    try:
+        user_id = current_user.user_id
+        documents = processor.vector_db.get_all_documents(user_id)
+        
+        has_folder_path = any('folder_path' in doc for doc in documents)
+        has_project_name = any('project_name' in doc for doc in documents)
+        
+        return jsonify({
+            'success': True, 
+            'folder_fix_loaded': has_folder_path and has_project_name,
+            'documents_count': len(documents),
+            'sample_doc': documents[0] if documents else None,
+            'all_docs': documents
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Ensure required directories exist
     for directory in ['uploads', 'temp', 'meeting_documents', 'logs', 'backups', 'templates', 'static']:

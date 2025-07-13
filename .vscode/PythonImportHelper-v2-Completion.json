@@ -568,6 +568,15 @@
         "documentation": {}
     },
     {
+        "label": "test_folder_fix",
+        "kind": 2,
+        "importPath": "flask_app",
+        "description": "flask_app",
+        "peekOfCode": "def test_folder_fix():\n    \"\"\"Test if our folder fix is loaded\"\"\"\n    try:\n        user_id = current_user.user_id\n        documents = processor.vector_db.get_all_documents(user_id)\n        has_folder_path = any('folder_path' in doc for doc in documents)\n        has_project_name = any('project_name' in doc for doc in documents)\n        return jsonify({\n            'success': True, \n            'folder_fix_loaded': has_folder_path and has_project_name,",
+        "detail": "flask_app",
+        "documentation": {}
+    },
+    {
         "label": "logger",
         "kind": 5,
         "importPath": "flask_app",

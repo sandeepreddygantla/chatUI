@@ -491,6 +491,12 @@ async function sendMessage() {
     // Parse message for document selection and enhanced @ mentions
     const { cleanMessage, documentIds, projectIds, meetingIds, dateFilters, folderPath } = parseMessageForDocuments(message);
     
+    // Debug logging
+    console.log('Parsed message data:', { cleanMessage, documentIds, projectIds, meetingIds, dateFilters, folderPath });
+    if (folderPath) {
+        console.log('✅ Folder path detected:', folderPath);
+    }
+    
     // Check if this is a summary query and show notification
     const isSummaryQuery = detectSummaryQuery(message);
     if (isSummaryQuery && !documentIds) {
@@ -737,6 +743,10 @@ async function loadDocuments() {
             const data = await response.json();
             if (data.success) {
                 availableDocuments = data.documents;
+                console.log('Loaded documents:', availableDocuments);
+                console.log('Sample document:', availableDocuments[0]);
+                console.log('Sample document folder_path value:', availableDocuments[0]?.folder_path);
+                console.log('Sample document folder_path type:', typeof availableDocuments[0]?.folder_path);
                 // Also reload folders when documents are loaded to keep them in sync
                 await loadFolders();
             }
@@ -1545,9 +1555,17 @@ function parseMessageForDocuments(message) {
             case 'folder':
             case 'folder_files':
             case 'folder_selected':
-                const folder = availableFolders.find(f => f.display_name === mention.value);
+                // Case-insensitive folder lookup
+                const folder = availableFolders.find(f => 
+                    f.display_name.toLowerCase() === mention.value.toLowerCase()
+                );
                 if (folder) {
                     filterData.folderPath = folder.folder_path;
+                    console.log('Found folder:', folder.display_name, 'Path:', folder.folder_path);
+                } else {
+                    console.log('Folder not found:', mention.value);
+                    console.log('Available folders:', availableFolders.map(f => f.display_name));
+                    console.log('Folder objects:', availableFolders);
                 }
                 break;
             case 'file':
@@ -1582,6 +1600,7 @@ function parseMessageForDocuments(message) {
 
 function parseEnhancedMentionsFromMessage(message) {
     const mentions = [];
+    console.log('Parsing message for mentions:', message);
     
     // Parse @ mentions (projects, meetings, dates, files)
     const atMentionRegex = /@(project|meeting|date|file):([^@\s]+)/g;
@@ -1596,24 +1615,26 @@ function parseEnhancedMentionsFromMessage(message) {
         });
     }
     
-    // Parse # mentions (folders)
-    const folderMentionRegex = /#([^#\s>]+)>/g;
+    // Parse # mentions (folders) with > syntax
+    const folderMentionRegex = /#([^#>]+)>/g;
     while ((match = folderMentionRegex.exec(message)) !== null) {
         mentions.push({
             type: 'folder_files',
             prefix: '',
-            value: match[1],
+            value: match[1].trim(),
             fullMatch: match[0]
         });
     }
     
-    // Parse folder selections without >
-    const folderSelectionRegex = /#([^#\s>]+)(?!>)/g;
+    // Parse folder selections without > (support multi-word folder names)
+    // Capture everything after # until we hit common action words
+    const folderSelectionRegex = /#([^#>]+?)(?=\s+(?:give|show|tell|what|how|when|where|summarize|summary|list|find|search|get|provide|explain|analyze|report|create|add|update|delete|help|do)|$)/gi;
     while ((match = folderSelectionRegex.exec(message)) !== null) {
+        console.log('Folder regex matched:', match[1].trim(), 'from:', match[0]);
         mentions.push({
             type: 'folder_selected',
             prefix: '',
-            value: match[1],
+            value: match[1].trim(),
             fullMatch: match[0]
         });
     }
@@ -1896,11 +1917,19 @@ async function loadFolders() {
             const data = await response.json();
             if (data.success && data.documents) {
                 // Extract unique folder paths from documents
+                console.log('All documents in loadFolders:', data.documents);
+                data.documents.forEach((doc, i) => {
+                    console.log(`Doc ${i}: ${doc.filename}, folder_path: "${doc.folder_path}" (type: ${typeof doc.folder_path})`);
+                });
+                
                 const docsWithFolders = data.documents.filter(doc => doc.folder_path);
+                console.log('Documents with folder_path:', docsWithFolders);
                 const folderPaths = [...new Set(data.documents
                     .filter(doc => doc.folder_path && doc.folder_path.trim())
                     .map(doc => doc.folder_path))];
                 
+                console.log('Unique folder paths found:', folderPaths);
+                console.log('Folder paths length:', folderPaths.length);
                 
                 if (folderPaths.length === 0) {
                     // If no folder_path, try to infer from project_id or create default folders
@@ -1918,15 +1947,26 @@ async function loadFolders() {
                     
                     const projectFolders = Object.keys(projectGroups).map((projectId, index) => {
                         let folderName;
+                        let actualFolderPath = `user_folder/project_${projectId}`; // fallback
+                        
                         if (projectId === 'default') {
                             folderName = 'Default Folder';
                         } else {
                             // Find the actual project name from availableProjects
                             const project = availableProjects.find(p => p.project_id === projectId);
                             folderName = project ? project.project_name : `Project ${index + 1}`;
+                            
+                            // Use actual folder_path from documents if available
+                            const docWithFolderPath = projectGroups[projectId].find(doc => doc.folder_path);
+                            if (docWithFolderPath) {
+                                actualFolderPath = docWithFolderPath.folder_path;
+                                console.log(`Project "${folderName}" (${projectId}) - Using actual folder path: ${actualFolderPath}`);
+                            } else {
+                                console.log(`Project "${folderName}" (${projectId}) - No folder_path found, using fallback: ${actualFolderPath}`);
+                            }
                         }
                         return {
-                            folder_path: `user_folder/project_${projectId}`,
+                            folder_path: actualFolderPath,
                             folder_name: folderName,
                             display_name: folderName,
                             project_id: projectId, // Store the actual project_id for matching
@@ -1952,10 +1992,19 @@ async function loadFolders() {
                         const parts = path.split('/');
                         const folderName = parts[parts.length - 1]; // Get the last part as folder name
                         const folderDocs = data.documents.filter(doc => doc.folder_path === path);
+                        
+                        // Try to get project_name from documents in this folder
+                        let displayName = folderName.replace(/^project_/, '').replace(/_/g, ' '); // Fallback: clean up folder name
+                        const docWithProjectName = folderDocs.find(doc => doc.project_name);
+                        if (docWithProjectName && docWithProjectName.project_name) {
+                            displayName = docWithProjectName.project_name; // Use actual project name
+                        }
+                        
                         return {
                             folder_path: path,
                             folder_name: folderName,
-                            display_name: folderName.replace(/^project_/, '').replace(/_/g, ' '), // Clean up display name
+                            display_name: displayName,
+                            project_id: docWithProjectName ? docWithProjectName.project_id : null,
                             documents: folderDocs // Store associated documents
                         };
                     });
@@ -2421,12 +2470,33 @@ function regenerateResponse() {
         
         setTimeout(async () => {
             try {
+                // Parse the message again to get filtering parameters for retry
+                const { cleanMessage, documentIds, projectIds, meetingIds, dateFilters, folderPath } = parseMessageForDocuments(lastUserMessage.content);
+                
+                // Build the same request body as the original send
+                const retryRequestBody = { message: cleanMessage };
+                if (documentIds) {
+                    retryRequestBody.document_ids = documentIds;
+                }
+                if (projectIds) {
+                    retryRequestBody.project_ids = projectIds;
+                }
+                if (meetingIds) {
+                    retryRequestBody.meeting_ids = meetingIds;
+                }
+                if (dateFilters) {
+                    retryRequestBody.date_filters = dateFilters;
+                }
+                if (folderPath) {
+                    retryRequestBody.folder_path = folderPath;
+                }
+                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: lastUserMessage.content })
+                    body: JSON.stringify(retryRequestBody)
                 });
 
                 hideTypingIndicator();

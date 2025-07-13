@@ -719,26 +719,20 @@ class VectorDatabase:
         # Generate summary prompt based on query type
         timeframe_display = timeframe.replace('_', ' ').title()
         summary_prompt = f"""
-        Based on the meeting documents from {timeframe_display}, please provide a comprehensive summary that addresses the user's request: "{query}"
-
-        Please organize your response to include:
-        1. **Overview**: High-level summary of activities during this period
-        2. **Key Decisions**: Important decisions made during meetings
-        3. **Action Items**: Tasks and follow-ups identified
-        4. **Participants**: Key people involved across meetings
-        5. **Timeline**: Chronological progression of events
-        6. **Outstanding Issues**: Any unresolved matters
+        The user asked: "{query}"
+        
+        Based on the meeting documents from {timeframe_display}, please answer their question naturally and comprehensively. Focus on what they specifically asked for rather than forcing a predetermined structure.
 
         Meeting Documents Context:
         {full_context}
 
-        Provide a well-structured response that gives the user a clear understanding of what happened during {timeframe_display}.
+        Provide a direct, helpful answer that addresses exactly what the user wants to know about {timeframe_display}.
         """
         
         try:
             # Use class LLM instance
             messages = [
-                SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
+                SystemMessage(content="You are a helpful AI assistant that answers questions about meeting documents naturally. Focus on what the user specifically asked for rather than forcing a predetermined structure."),
                 HumanMessage(content=summary_prompt)
             ]
             
@@ -802,18 +796,20 @@ class VectorDatabase:
         
         if user_id:
             cursor.execute('''
-                SELECT document_id, filename, date, title, content_summary, file_size, chunk_count,
-                       user_id, meeting_id, project_id
-                FROM documents
-                WHERE user_id = ?
-                ORDER BY date DESC
+                SELECT d.document_id, d.filename, d.date, d.title, d.content_summary, d.file_size, d.chunk_count,
+                       d.user_id, d.meeting_id, d.project_id, d.folder_path, p.project_name
+                FROM documents d
+                LEFT JOIN projects p ON d.project_id = p.project_id
+                WHERE d.user_id = ?
+                ORDER BY d.date DESC
             ''', (user_id,))
         else:
             cursor.execute('''
-                SELECT document_id, filename, date, title, content_summary, file_size, chunk_count,
-                       user_id, meeting_id, project_id
-                FROM documents
-                ORDER BY date DESC
+                SELECT d.document_id, d.filename, d.date, d.title, d.content_summary, d.file_size, d.chunk_count,
+                       d.user_id, d.meeting_id, d.project_id, d.folder_path, p.project_name
+                FROM documents d
+                LEFT JOIN projects p ON d.project_id = p.project_id
+                ORDER BY d.date DESC
             ''')
         
         documents = []
@@ -828,7 +824,9 @@ class VectorDatabase:
                 'chunk_count': row[6],
                 'user_id': row[7],
                 'meeting_id': row[8],
-                'project_id': row[9]
+                'project_id': row[9],
+                'folder_path': row[10],
+                'project_name': row[11]
             }
             documents.append(doc)
         
@@ -874,22 +872,17 @@ class VectorDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        # When folder_path is specified, ONLY filter by user and folder
+        # This ensures we get ALL documents in the specified folder
         conditions = ["user_id = ?", "folder_path = ?"]
         params = [user_id, folder_path]
         
-        if meeting_id:
-            if isinstance(meeting_id, list):
-                # Handle multiple meeting IDs
-                placeholders = ','.join(['?' for _ in meeting_id])
-                conditions.append(f"meeting_id IN ({placeholders})")
-                params.extend(meeting_id)
-            else:
-                # Handle single meeting ID
-                conditions.append("meeting_id = ?")
-                params.append(meeting_id)
-        elif project_id:
-            conditions.append("project_id = ?")
-            params.append(project_id)
+        # Only add additional filters if folder_path is not the primary filter
+        # This prevents conflicting conditions when user selects a specific folder
+        if project_id and meeting_id:
+            # Both project and meeting specified - this is likely an error case
+            # but we'll handle it by prioritizing folder_path only
+            logger.warning(f"Both project_id and meeting_id specified with folder_path - using folder_path only")
         
         cursor.execute(f'''
             SELECT document_id FROM documents 
@@ -898,6 +891,8 @@ class VectorDatabase:
         
         document_ids = [row[0] for row in cursor.fetchall()]
         conn.close()
+        
+        logger.info(f"Found {len(document_ids)} documents in folder {folder_path} for user {user_id}")
         return document_ids
     
     def keyword_search_chunks_by_user(self, keywords: List[str], user_id: str, project_id: str = None, meeting_id: Union[str, List[str]] = None, limit: int = 50) -> List[str]:
@@ -1157,7 +1152,7 @@ class VectorDatabase:
         cursor.execute('''
             SELECT document_id, filename, date, title, content_summary, 
                    main_topics, past_events, future_actions, participants,
-                   chunk_count, file_size, user_id, meeting_id, project_id
+                   chunk_count, file_size, user_id, meeting_id, project_id, folder_path
             FROM documents 
             WHERE user_id = ?
             ORDER BY date DESC
@@ -1179,7 +1174,8 @@ class VectorDatabase:
                 'file_size': row[10],
                 'user_id': row[11],
                 'meeting_id': row[12],
-                'project_id': row[13]
+                'project_id': row[13],
+                'folder_path': row[14]
             }
             documents.append(doc_dict)
         
@@ -1194,7 +1190,7 @@ class VectorDatabase:
         cursor.execute('''
             SELECT document_id, filename, date, title, content_summary, 
                    main_topics, past_events, future_actions, participants,
-                   chunk_count, file_size, user_id, meeting_id, project_id
+                   chunk_count, file_size, user_id, meeting_id, project_id, folder_path
             FROM documents 
             WHERE project_id = ? AND user_id = ?
             ORDER BY date DESC
@@ -1216,7 +1212,8 @@ class VectorDatabase:
                 'file_size': row[10],
                 'user_id': row[11],
                 'meeting_id': row[12],
-                'project_id': row[13]
+                'project_id': row[13],
+                'folder_path': row[14]
             }
             documents.append(doc_dict)
         
@@ -1495,26 +1492,20 @@ class EnhancedMeetingDocumentProcessor:
         # Generate summary prompt based on query type
         timeframe_display = timeframe.replace('_', ' ').title()
         summary_prompt = f"""
-        Based on the meeting documents from {timeframe_display}, please provide a comprehensive summary that addresses the user's request: "{query}"
-
-        Please organize your response to include:
-        1. **Overview**: High-level summary of activities during this period
-        2. **Key Decisions**: Important decisions made during meetings
-        3. **Action Items**: Tasks and follow-ups identified
-        4. **Participants**: Key people involved across meetings
-        5. **Timeline**: Chronological progression of events
-        6. **Outstanding Issues**: Any unresolved matters
+        The user asked: "{query}"
+        
+        Based on the meeting documents from {timeframe_display}, please answer their question naturally and comprehensively. Focus on what they specifically asked for rather than forcing a predetermined structure.
 
         Meeting Documents Context:
         {full_context}
 
-        Provide a well-structured response that gives the user a clear understanding of what happened during {timeframe_display}.
+        Provide a direct, helpful answer that addresses exactly what the user wants to know about {timeframe_display}.
         """
         
         try:
             # Use class LLM instance
             messages = [
-                SystemMessage(content="You are an intelligent meeting analysis assistant. Provide comprehensive, well-organized summaries of meeting documents with clear structure and actionable insights."),
+                SystemMessage(content="You are a helpful AI assistant that answers questions about meeting documents naturally. Focus on what the user specifically asked for rather than forcing a predetermined structure."),
                 HumanMessage(content=summary_prompt)
             ]
             
@@ -1956,8 +1947,8 @@ class EnhancedMeetingDocumentProcessor:
         if not document_ids:
             logger.info("No specific documents provided, including all user documents")
             if folder_path:
-                # Use folder-based filtering
-                document_ids = self.vector_db.get_user_documents_by_folder(user_id, folder_path, project_id, meeting_id)
+                # Use folder-based filtering ONLY - don't mix with project/meeting filters
+                document_ids = self.vector_db.get_user_documents_by_folder(user_id, folder_path)
                 logger.info(f"Including {len(document_ids)} documents from folder {folder_path} for user {user_id}")
             else:
                 # Use standard scope-based filtering
@@ -2037,36 +2028,17 @@ class EnhancedMeetingDocumentProcessor:
         
         # Generate answer using OpenAI GPT-4o
         answer_prompt = f"""
-You are an expert AI assistant specializing in analyzing meeting documents. Based on the provided meeting document content, give a comprehensive and detailed answer to the user's question.
+User Question: {query}
 
 Meeting Document Context:
 {context}
 
-User Question: {query}
-
-Instructions for your response:
-- Provide a thorough, well-structured, and informative answer based on the meeting information
-- Use specific details, dates, names, and facts from the documents
-- Cite specific document names when referencing information from those documents
-- DO NOT reference any "chunks", "chunk numbers", or technical document sections
-- Present information naturally as if reading from complete meeting documents
-- If the question asks for summaries: Provide a consolidated summary across relevant meetings with key points
-- If timeline questions: Organize information chronologically with specific dates when available
-- If about future plans: Focus on upcoming actions, decisions, deadlines, and planned activities
-- If about past events: Highlight what has been discussed, completed, decided, or resolved
-- If about specific topics: Extract and synthesize all relevant information about those topics
-- If about participants: Include their roles, contributions, and responsibilities mentioned
-- If information spans multiple documents, clearly indicate which information comes from which document
-- Be precise about what information is available vs. what might be missing
-- Use bullet points or numbered lists when appropriate for clarity
-- If the answer requires information not available in the documents, clearly state what additional information would be helpful
-
-Provide a comprehensive answer:
+Please answer the user's question naturally and directly based on the meeting documents. Focus on what they specifically asked for, using relevant details from the documents. Don't follow a rigid format - just provide a helpful, conversational response that addresses their actual question.
 """
         
         try:
             messages = [
-                SystemMessage(content="You are a helpful AI assistant specializing in analyzing meeting documents. Provide comprehensive, accurate, and well-structured answers based on the meeting content provided. Be thorough and cite specific information from the documents."),
+                SystemMessage(content="You are a helpful AI assistant that answers questions about meeting documents naturally and conversationally. Answer exactly what the user asks for without forcing predetermined structures."),
                 HumanMessage(content=answer_prompt)
             ]
             
@@ -2079,7 +2051,7 @@ Provide a comprehensive answer:
             try:
                 self.refresh_clients()
                 messages = [
-                    SystemMessage(content="You are a helpful AI assistant specializing in analyzing meeting documents. Provide comprehensive, accurate, and well-structured answers based on the meeting content provided."),
+                    SystemMessage(content="You are a helpful AI assistant that answers questions about meeting documents naturally and conversationally. Answer exactly what the user asks for without forcing predetermined structures."),
                     HumanMessage(content=answer_prompt)
                 ]
                 response = self.llm.invoke(messages)
@@ -2111,7 +2083,7 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
 """
 
             messages = [
-                SystemMessage(content="You are an expert at generating relevant follow-up questions for meeting document analysis. Create questions that help users explore the meeting content more deeply."),
+                SystemMessage(content="You generate natural, conversational follow-up questions that help users explore their meeting documents further."),
                 HumanMessage(content=follow_up_prompt)
             ]
             
@@ -2260,24 +2232,12 @@ Return exactly 4-5 questions, each on a new line, without numbers or bullet poin
             
             # Generate flexible, user-centric response
             flexible_prompt = f"""
-You are an expert meeting document analyst. Based on the provided content from {total_files} meeting documents, answer the user's question naturally and comprehensively.
-
 User Question: {query}
 
-Document Content:
+Document Content from {total_files} files:
 {self._format_content_for_analysis(content_chunks)}
 
-Instructions:
-- Answer the user's question directly and naturally
-- Use information from ALL {total_files} files where relevant
-- If the user asked for a summary, provide a natural overview
-- If they asked about specific topics, focus on those topics
-- If they asked about people, focus on participants and roles
-- Include specific details, dates, and document references when helpful
-- Don't force artificial structure - respond naturally to what was asked
-- Be comprehensive but focused on answering the actual question
-
-Provide a thorough answer based on all {total_files} files:
+Please answer the user's question naturally and thoroughly using information from all the files. Focus on exactly what they asked for without forcing any predetermined structure.
 """
 
             messages = [
