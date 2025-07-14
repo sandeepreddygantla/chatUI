@@ -1714,7 +1714,7 @@ class EnhancedMeetingDocumentProcessor:
             logger.error(f"Error reading document {file_path}: {e}")
             return ""
     
-    def create_content_summary(self, content: str, max_length: int = 500) -> str:
+    def create_content_summary(self, content: str, max_length: int = 1500) -> str:
         """Create a condensed summary of the content"""
         try:
             summary_prompt = f"""
@@ -2060,7 +2060,7 @@ class EnhancedMeetingDocumentProcessor:
         logger.info(f"🔍 HYBRID SEARCH: Found {len(relevant_chunks)} relevant chunks")
         
         # Filter chunks by document IDs if specified
-        if document_ids:
+        if document_ids:  # Temporarily disabled @ feature
             original_count = len(relevant_chunks)
             relevant_chunks = [chunk for chunk in relevant_chunks if chunk.document_id in document_ids]
             logger.info(f"🔍 DOCUMENT FILTERING: Filtered from {original_count} to {len(relevant_chunks)} chunks based on document IDs")

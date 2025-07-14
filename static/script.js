@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFolders();
     
     // Setup @ mention detection
-    setupAtMentionDetection();
+    // setupAtMentionDetection();  // Temporarily disabled for demo
     
 });
 
